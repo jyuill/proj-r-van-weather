@@ -27,7 +27,7 @@ yr_data <- yr_start
 
 for(yr in 1:yr_end-yr_start){
 fname <- paste0("~/../Google Drive/Data/van-hrbr-weather-eng-daily-0101",yr_data,"-1231",yr_data,".csv")
-if(yr_data>2017){
+if(yr_data>2017){ ## starting in 2018, heading info in csv file has extra row
 vw <- read.csv(fname, skip=25, header = TRUE)
 } else {
   vw <- read.csv(fname, skip=24, header = TRUE)
@@ -37,3 +37,5 @@ yr_data <- yr_data+1
 }
 table(vw.all$Year)
 
+## save results
+write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
