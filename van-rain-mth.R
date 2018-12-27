@@ -53,7 +53,12 @@ ggplot(vw1.x, aes(x=Year, y=Mean.Temp, group=1, color="Mean"))+geom_line()+
 ## MONTHLY precipitation ####
 ## Monthly precipitation data
 vw.precip.mth <- vw1 %>% group_by(Month) %>%
-  summarize(ave_precip=mean(Total.Precip, na.rm=TRUE))
+  summarize(ave_precip=mean(Total.Precip, na.rm=TRUE)) %>%
+  mutate(pc_rank=percent_rank(ave_precip),
+         pc=ave_precip/sum(ave_precip))
+## rank the months
+vw.precip.mth.rank <- vw.precip.mth %>% arrange(pc_rank) %>%
+  mutate(pc_cum=cumsum(pc))
 ## Ave precip by month ####
 ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()
 ## Ave precip by month in order
@@ -86,7 +91,7 @@ ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()+
   geom_hline(yintercept=vw.precip.11.2018[[4]])
 
 ### NOVEMBER RAIN ####
-## rank novembers
+## rank novembers ####
 vw.precip.11 <- vw.precip.mth.yr %>% filter(Month=='11') %>%
   arrange(desc(ttl_precip))
 summary(vw.precip.11)
@@ -130,6 +135,8 @@ ggplot(vw.precip.11.pc, aes(x=reorder(Year, precip.rank), y=cum.dist, color="cum
   geom_hline(yintercept=0.8)
 
 ## average daily rain in each month
+## see above
 
 ## number of days with rain>0 mm
+## see above
 
