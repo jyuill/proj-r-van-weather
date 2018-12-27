@@ -59,12 +59,21 @@ ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()
 ## Ave precip by month in order
 ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col()
 
+vw.precip.mth <- vw.precip.mth %>% mutate(
+  rank=rank(ave_precip)
+) %>% arrange(rank)
+
 ## Distribution of precipitation by month
 ## Monthly precipitation for each month, each year
-vw.precip.mth.yr <- vw1 %>% group_by(Year, Month) %>%
-  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE))
+vw.precip.mth.yr <- vw1 %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Month) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+
 ## Range in precipitation by month ####
 ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()
+## Range in precip days by month
+ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()
 
 ## add ref line for Nov 2018 and Dec 2018 ####
 vw.precip.11.2018 <- vw.precip.mth.yr %>% filter(Year==2018 & Month==11)
@@ -73,11 +82,14 @@ vw.precip.12.2018 <- vw.precip.mth.yr %>% filter(Year==2018 & Month==12)
 ## Range by month with Nov 2018 ref line
 ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
   geom_hline(yintercept=vw.precip.11.2018[[3]])
+ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()+
+  geom_hline(yintercept=vw.precip.11.2018[[4]])
 
 ### NOVEMBER RAIN ####
 ## rank novembers
 vw.precip.11 <- vw.precip.mth.yr %>% filter(Month=='11') %>%
   arrange(desc(ttl_precip))
+summary(vw.precip.11)
 vw.precip.11.top <- vw.precip.11[1:10,]
 ggplot(vw.precip.11.top, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')
 
@@ -89,13 +101,33 @@ ggplot(vw.precip.11, aes(x=ttl_precip))+geom_histogram(binwidth=100)+
 vw.precip.11.pc <- vw.precip.11 %>% ungroup() %>% arrange(ttl_precip) %>%
   #mutate(precip.pc=quantile(ttl_precip))
   mutate(precip.rank=rank(ttl_precip),
-         precip.pc=precip.rank/max(precip.rank))
-
+         precip.pc=precip.rank/max(precip.rank),
+         cum.dist=cume_dist(ttl_precip),
+         pc.rank=percent_rank(ttl_precip))
+## check percentiles, with varying types
+quantile(vw.precip.11.pc$ttl_precip, 0.4)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=3)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=4)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=5)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=6)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=8)
+quantile(vw.precip.11.pc$ttl_precip, 0.4, type=9)
+## test percentiles with an even 20 items
+vw.precip.11.pc.7 <- vw.precip.11 %>% ungroup() %>%
+  filter(Year!=2007) %>% arrange(ttl_precip) %>%
+  #mutate(precip.pc=quantile(ttl_precip))
+  mutate(precip.rank=rank(ttl_precip),
+         precip.pc=precip.rank/max(precip.rank),
+         cum.dist=cume_dist(ttl_precip),
+         pc.rank=percent_rank(ttl_precip))
+quantile(vw.precip.11.pc.7$ttl_precip, 0.5)
 
 # vw.precip.11.2 <- vw.precip.mth.yr %>% filter(Month=='11') %>%
 #  top_n(10)
   
-ggplot(vw.precip.11, aes(x=))
+ggplot(vw.precip.11.pc, aes(x=reorder(Year, precip.rank), y=cum.dist, color="cum"))+geom_point()+
+  geom_point(aes(y=pc.rank, color='pc'))+
+  geom_hline(yintercept=0.8)
 
 ## average daily rain in each month
 
