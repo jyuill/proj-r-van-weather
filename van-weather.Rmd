@@ -1,11 +1,126 @@
 ---
 title: "Vancouver Weather Analysis"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
-```{r SETUP, echo=FALSE}
-library(tidyverse)
+```{r SETUP, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, 
+                      warning=FALSE, 
+                      message=FALSE)
 
+library(tidyverse)
+library(PerformanceAnalytics)
+
+```
+
+## Data Collection
+
+Data is collected from Govt of Canada website:
+
+1. search: http://climate.weather.gc.ca/historical_data/search_historic_data_e.html
+2. specify station as containing 'vancouver harbour'
+3. select 'daily', select 'year'
+4. 'Go' goes to a page to access results for year
+
+(process is automated in 'van-weather-import.R')
+
+```{r IMPORT DATA}
+## get latest data using van-weather-import.R
+## import saved data
+vw_data <- read_csv("input/van-hrbr-weather.csv")
+
+## convert Year, Month to factors for better charting
+vw_data$Year <- as.factor(vw_data$Year)
+vw_data$Month <- as.factor(vw_data$Month)
+#vw_data$Day <- as.factor(vw_data$Day)
+
+
+```
+
+Check data structure:
+
+```{r DATA STRUCTURE}
+str(vw_data)
+
+```
+
+Check Data Relationships
+
+* uses PerformanceAnalytics package
+
+```{r DATA RELATIONSHIPS}
+chart.Correlation(vw_data[,c(5,6,7,8)], histogram = TRUE)
+
+```
+
+```{r TS1}
+## time series chart from Performance Analytics pkg - not really better than just using ggplot2
+# vw_ts <- data.frame(vw_data)
+# row.names(vw_ts) <- vw_ts$Date
+# chart.TimeSeries(vw_ts[,c(5,6,7,8), drop=FALSE])
+```
+
+## MONTHLY Precipitation 
+
+Monthly precipitation data
+
+```{r MONTHLY PRECIP}
+vw.precip.mth <- vw_data %>% group_by(Month) %>%
+  summarize(ave_precip=mean(Total.Precip, na.rm=TRUE)) %>%
+  mutate(pc_rank=percent_rank(ave_precip),
+         pc=ave_precip/sum(ave_precip),
+         rank=rank(ave_precip))
+
+## Ave precip by month ####
+chart.title <- "Average Precipitation by Month"
+ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
+  ggtitle(chart.title)
+## Ave precip by month in order
+chart.title <- "Months Ranked by Ave. Precipitation"
+ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col()+
+  ggtitle(chart.title)
+
+vw.precip.mth.rank <- vw.precip.mth %>% arrange(desc(rank))
+vw.precip.mth.rank
+```
+
+Data by Month - ranked in order of highest precipitation
+
+```{r MONTHLY PRECIP TABLE}
+vw.precip.mth.rank <- vw.precip.mth %>% arrange(desc(rank))
+vw.precip.mth.rank
+```
+
+## NOVEMBER Precipitation
+
+```{r NOV Precip}
+## Monthly precipitation for each month, each year
+vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Month) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+
+vw.precip.11 <- vw.precip.mth.yr %>% filter(Month=='11') %>%
+  arrange(desc(ttl_precip))
+
+vw.precip.11.top <- vw.precip.11[1:10,]
+chart.title <- "November Rain for each Year"
+ggplot(vw.precip.11.top, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+  ggtitle(chart.title)
+
+chart.title <- "Novembers Ranked by Precipitation"
+ggplot(vw.precip.11, aes(x=reorder(Year, -ttl_precip), y=ttl_precip))+geom_col()+
+  ggtitle(chart.title)
+
+## get percentiles for Novembers
+vw.precip.11.pc <- vw.precip.11 %>% ungroup() %>% arrange(ttl_precip) %>%
+  #mutate(precip.pc=quantile(ttl_precip))
+  mutate(precip.rank=rank(ttl_precip),
+         precip.pc=precip.rank/max(precip.rank),
+         cum.dist=cume_dist(ttl_precip),
+         pc.rank=percent_rank(ttl_precip))
 
 ```
 
