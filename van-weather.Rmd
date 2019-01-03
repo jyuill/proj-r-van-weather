@@ -64,9 +64,9 @@ chart.Correlation(vw_data[,c(5,6,7,8)], histogram = TRUE)
 
 ## MONTHLY Precipitation 
 
-Monthly precipitation data
+### Monthly precipitation data: Averages
 
-```{r MONTHLY PRECIP}
+```{r MONTHLY PRECIP COMBINED}
 vw.precip.mth <- vw_data %>% group_by(Month) %>%
   summarize(ave_precip=mean(Total.Precip, na.rm=TRUE)) %>%
   mutate(pc_rank=percent_rank(ave_precip),
@@ -82,16 +82,35 @@ chart.title <- "Months Ranked by Ave. Precipitation"
 ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col()+
   ggtitle(chart.title)
 
-vw.precip.mth.rank <- vw.precip.mth %>% arrange(desc(rank))
-vw.precip.mth.rank
 ```
 
-Data by Month - ranked in order of highest precipitation
+#### Data by Month - ranked in order of highest precipitation
 
 ```{r MONTHLY PRECIP TABLE}
 vw.precip.mth.rank <- vw.precip.mth %>% arrange(desc(rank))
 vw.precip.mth.rank
 ```
+
+### Monthly Preciptiation: Ranges
+
+```{r}
+## Distribution of precipitation by month ####
+## Monthly precipitation for each month, each year
+vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Month) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+
+## Range in precipitation by month ####
+chart.title <- "Monthly Precip. Ranges during Period"
+ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
+  ggtitle(chart.title)
+## Range in precip days by month
+chart.title <- "Monthly Rainy Days Ranges during Period"
+ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()+
+  ggtitle(chart.title)
+```
+
 
 ## NOVEMBER Precipitation
 

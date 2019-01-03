@@ -68,7 +68,7 @@ vw.precip.mth <- vw.precip.mth %>% mutate(
   rank=rank(ave_precip)
 ) %>% arrange(rank)
 
-## Distribution of precipitation by month
+## Distribution of precipitation by month ####
 ## Monthly precipitation for each month, each year
 vw.precip.mth.yr <- vw1 %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
   group_by(Year, Month) %>%
