@@ -11,3 +11,6 @@ df.soc.sent <- df.soc.sent %>% mutate(
   salt.scale = scale(SALT),
   bfv.scale=scale(BFV)
 )
+
+## save with standardized data
+write.csv(df.soc.sent, 'input/SocSent.csv')
