@@ -3,7 +3,7 @@ library(tidyverse)
 #library(httr)
 
 
-### FULL VERSION - skip to SHORTCUT section below for DIRECT DOWNLOAD ####
+### FULL MANUAL VERSION - skip to SHORTCUT section below for DIRECT DOWNLOAD ####
 ## weather data from: (skip 4a below to go straight to Van harbour download page)
 ## 1. search: http://climate.weather.gc.ca/historical_data/search_historic_data_e.html
 ## 2. specify station as containing 'vancouver harbour'
@@ -19,7 +19,7 @@ library(tidyverse)
 ### SHORTCUT VERSION -> DIRECT DOWNLOAD ####
 ## 1. Generate URL that matches Vancouver Harbour download page for specified year:
 ## year for data
-yr <- 2018
+yr <- 2019
 ## data url
 data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=888&Year=",yr,"&Month=12&Day=1&timeframe=2&submit=Download+Data")
 ## destination to save file
