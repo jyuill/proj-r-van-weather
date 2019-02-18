@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo=FALSE,
                       message=FALSE)
 
 library(tidyverse)
+library(scales)
 library(PerformanceAnalytics)
 
 ```
@@ -71,7 +72,7 @@ vw.precip.mth <- vw_data %>% group_by(Month) %>%
   summarize(ave_precip=mean(Total.Precip, na.rm=TRUE)) %>%
   mutate(pc_rank=percent_rank(ave_precip),
          pc=ave_precip/sum(ave_precip),
-         rank=rank(ave_precip))
+         rank=rank(desc(ave_precip)))
 
 ## Ave precip by month ####
 chart.title <- "Average Precipitation by Month"
@@ -87,7 +88,7 @@ ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col
 #### Data by Month - ranked in order of highest precipitation
 
 ```{r MONTHLY PRECIP TABLE}
-vw.precip.mth.rank <- vw.precip.mth %>% arrange(desc(rank))
+vw.precip.mth.rank <- vw.precip.mth %>% arrange(rank)
 vw.precip.mth.rank
 ```
 
@@ -141,5 +142,23 @@ vw.precip.11.pc <- vw.precip.11 %>% ungroup() %>% arrange(ttl_precip) %>%
          cum.dist=cume_dist(ttl_precip),
          pc.rank=percent_rank(ttl_precip))
 
+```
+
+## Monthly Comparison YoY
+
+For each month, what has been the pattern in precipitation over the years?
+
+```{r PLOT MONTHS YOY, fig.width=5, fig.height=12}
+## show each mth side-by-side YoY to see patterns, highs, lows
+
+## facet_wrap is condensed but too many years to be able to read x axis
+# ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+#   facet_wrap(Month~.)+
+#   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+## facet_grid is too wide and short unless re-sized
+ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+  facet_grid(Month~.)+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 ```
 

@@ -31,6 +31,16 @@ vw.new <- read_csv(file_save_url, skip=25)
 vw.new$Month <- as.numeric(vw.new$Month)
 vw.new$Day <- as.numeric(vw.new$Day)
 
+## check imported data
+summary(vw.new)
+str(vw.new)
+head(vw.new)
+## bar chart of max temp (colnames changed to be easier to work with)
+vw.new2 <- vw.new %>%
+  rename(date=`Date/Time`)
+colnames(vw.new2)[6] <- "maxtemp"
+ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
+
 ## SELECT columns of interest ####
 vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
 ## CLEAN up col names ####
@@ -56,6 +66,7 @@ summary(vw.all$Date)
 
 ## SAVE ####
 write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
+
 
 ###\\\\\\\\\\\\\\\\\\\\
 ## LOOP FOR MULTIPLE YEARS OF HISTORICAL DATA ####
