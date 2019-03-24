@@ -9,7 +9,7 @@ library(tidyverse)
 ## 2. specify station as containing 'vancouver harbour'
 ## 3. select 'daily', select 'year'
 ## 4. 'Go' goes to a page to access results for year
-## 4a. SHORTCUT TO VANCOUVER HARBOUR FOR GIVE YEAR
+## 4a. SHORTCUT TO VANCOUVER HARBOUR FOR GIVEN YEAR
 #yr <- 2018
 #paste0("http://climate.weather.gc.ca/climate_data/daily_data_e.html?hlyRange=1976-01-20%7C2018-12-27&dlyRange=1925-11-01%7C2018-12-27&mlyRange=1925-01-01%7C2007-02-01&StationID=888&Prov=BC&urlExtension=_e.html&searchType=stnName&optLimit=yearRange&StartYear=1840&EndYear=2018&selRowPerPage=25&Line=0&searchMethod=contains&Month=12&Day=27&txtStationName=vancouver+harbour&timeframe=2&Year=",yr)
 ## Copy from console into browser
