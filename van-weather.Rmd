@@ -47,6 +47,9 @@ str(vw_data)
 
 ```
 
+Earliest date: `r min(vw_data$Date)` <br />
+Most recent date: `r max(vw_data$Date)`
+
 Check Data Relationships
 
 * uses PerformanceAnalytics package

@@ -1,7 +1,10 @@
+## UPDATE WEATHER DATA FROM SOURCE
+## climate.weather.gc.ca/historical-data -> details below
+## if previous update was in same year as current, can run Source
+## check summary on Date (code below) to ensure most recent data obtained
 
 library(tidyverse)
 #library(httr)
-
 
 ### FULL MANUAL VERSION - skip to SHORTCUT section below for DIRECT DOWNLOAD ####
 ## weather data from: (skip 4a below to go straight to Van harbour download page)
@@ -63,6 +66,14 @@ vw.latest <- vw.new.sel %>% filter(Date>vw.recent[[1]])
 ## BIND NEW to existing ####
 vw.all <- bind_rows(vw.exist, vw.latest)
 summary(vw.all$Date)
+
+## test for duplicated dates
+table(duplicated(vw.all$Date))
+
+## huge bar chart of number of observations by month and by year
+# ggplot(vw.all, aes(x=Month))+
+#   geom_bar()+
+#   facet_grid(Year~.)
 
 ## SAVE ####
 write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
