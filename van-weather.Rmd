@@ -127,41 +127,51 @@ vw.precip.mth.rank
 ```{r}
 ## Distribution of precipitation by month ####
 
-
 ## Range in precipitation by month ####
-chart.title <- "Monthly Precip. Ranges during Period"
+chart.title <- "Monthly Precip. Ranges during Period (Red markers: current yr.)"
 ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=5)+
   ggtitle(chart.title)+theme_classic()
 ## Range in precip days by month
-chart.title <- "Monthly Rainy Days Ranges during Period"
+chart.title <- "Monthly Rainy Days Ranges during Period (Red markers: current yr.)"
 ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()+
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=precip_days),shape=18, color='red', size=5)+
   ggtitle(chart.title)+theme_classic()
 ```
 
 
-## NOVEMBER Precipitation
+## Current Month Precipitation
 
-```{r NOV Precip}
-## Monthly precipitation for each month, each year
-vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
-  group_by(Year, Month) %>%
-  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
-            precip_days=sum(precip.day, na.rm=TRUE))
+```{r CURRENT MTH Precip}
+## get name of current month
+curr.mth <- month.name[month(Sys.Date())]
 
-vw.precip.11 <- vw.precip.mth.yr %>% filter(Month=='11') %>%
-  arrange(desc(ttl_precip))
+## filter monthly data set for current month only
+vw.precip.mth.curr <- vw.precip.mth.yr %>% filter(Month==month(Sys.Date())) %>%
+  arrange(desc(Year)) ## sort by year to get latest
 
-vw.precip.11.top <- vw.precip.11[1:10,]
-chart.title <- "November Rain for each Year"
-ggplot(vw.precip.11.top, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+## get recent years for current month precipitation
+recentXyr <- 12
+vw.precip.mth.curr.recent <- vw.precip.mth.curr[1:recentXyr,]
+chart.title <- paste0(curr.mth, " Rain for each Year (last ",recentXyr, " years - with ave.)")
+ggplot(vw.precip.mth.curr.recent, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+  geom_hline(yintercept=mean(vw.precip.mth.curr.recent$ttl_precip), linetype='dashed')+
+  scale_y_continuous(expand=c(0,0))+theme_classic()+
   ggtitle(chart.title)
 
-chart.title <- "Novembers Ranked by Precipitation"
-ggplot(vw.precip.11, aes(x=reorder(Year, -ttl_precip), y=ttl_precip))+geom_col()+
+## show years in order of precipitation for current month
+vw.precip.mth.curr <- vw.precip.mth.yr %>% filter(Month==month(Sys.Date())) %>%
+  arrange(desc(ttl_precip)) ## sort by precipitation
+topXyr <- 15
+vw.precip.mth.curr.top <- vw.precip.mth.curr[1:topXyr,]
+
+chart.title <- paste0(curr.mth, " Ranked by Precipitation (top ",topXyr," yrs)")
+ggplot(vw.precip.mth.curr.top, aes(x=reorder(Year, -ttl_precip), y=ttl_precip))+geom_col()+
+  scale_y_continuous(expand=c(0,0))+theme_classic()+
   ggtitle(chart.title)
 
-## get percentiles for Novembers
-vw.precip.11.pc <- vw.precip.11 %>% ungroup() %>% arrange(ttl_precip) %>%
+## get percentiles for current mth
+vw.precip.mth.curr.pc <- vw.precip.mth.curr %>% ungroup() %>% arrange(ttl_precip) %>%
   #mutate(precip.pc=quantile(ttl_precip))
   mutate(precip.rank=rank(ttl_precip),
          precip.pc=precip.rank/max(precip.rank),
