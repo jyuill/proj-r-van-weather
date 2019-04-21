@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo=FALSE,
 library(tidyverse)
 library(scales)
 library(PerformanceAnalytics)
+library(lubridate)
 
 ```
 
@@ -36,7 +37,6 @@ vw_data <- read_csv("input/van-hrbr-weather.csv")
 vw_data$Year <- as.factor(vw_data$Year)
 vw_data$Month <- as.factor(vw_data$Month)
 #vw_data$Day <- as.factor(vw_data$Day)
-
 
 ```
 
@@ -70,21 +70,48 @@ chart.Correlation(vw_data[,c(5,6,7,8)], histogram = TRUE)
 
 ### Monthly precipitation data: Averages
 
+```{r MONTHLY PRECIP}
+## Monthly precipitation for each month, each year
+vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Month) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+```
+
+
 ```{r MONTHLY PRECIP COMBINED}
-vw.precip.mth <- vw_data %>% group_by(Month) %>%
-  summarize(ave_precip=mean(Total.Precip, na.rm=TRUE)) %>%
+vw.precip.mth <- vw.precip.mth.yr %>% group_by(Month) %>%
+  summarize(ave_precip=mean(ttl_precip, na.rm=TRUE)) %>%
   mutate(pc_rank=percent_rank(ave_precip),
          pc=ave_precip/sum(ave_precip),
          rank=rank(desc(ave_precip)))
 
+## filter for current year to overalp current year metrics on chart
+vw.precip.mth.curr.yr <- vw.precip.mth.yr %>% filter(Year==year(Sys.Date()))
+## need to have full 12 months for chart (even though some empty)
+## get highest month with data in current year
+fms <- max(as.numeric(vw.precip.mth.curr.yr$Month))+1
+## create data frame for blank months
+vw.precip.yr.future.mth <- data.frame(Year='2019',
+                                      Month=c(fms:12),
+                                       ttl_precip=NA,
+                                      precip_days=NA)
+## convert Month field in current yr from factor to integer for binding
+vw.precip.mth.curr.yr$Month <- as.integer(vw.precip.mth.curr.yr$Month)
+## add blank rows to current yr
+vw.precip.mth.curr.yr <- bind_rows(vw.precip.mth.curr.yr,
+                                    vw.precip.yr.future.mth) 
+
 ## Ave precip by month ####
-chart.title <- "Average Precipitation by Month"
+chart.title <- "Average Precipitation by Month (line is curr. yr.)"
 ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
-  ggtitle(chart.title)
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=5)+
+  scale_y_continuous(expand=c(0,0))+
+  ggtitle(chart.title)+theme_classic()
 ## Ave precip by month in order
 chart.title <- "Months Ranked by Ave. Precipitation"
 ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col()+
-  ggtitle(chart.title)
+  ggtitle(chart.title)+theme_classic()
 
 ```
 
@@ -99,20 +126,16 @@ vw.precip.mth.rank
 
 ```{r}
 ## Distribution of precipitation by month ####
-## Monthly precipitation for each month, each year
-vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
-  group_by(Year, Month) %>%
-  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
-            precip_days=sum(precip.day, na.rm=TRUE))
+
 
 ## Range in precipitation by month ####
 chart.title <- "Monthly Precip. Ranges during Period"
 ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
-  ggtitle(chart.title)
+  ggtitle(chart.title)+theme_classic()
 ## Range in precip days by month
 chart.title <- "Monthly Rainy Days Ranges during Period"
 ggplot(vw.precip.mth.yr, aes(x=Month, y=precip_days))+geom_boxplot()+
-  ggtitle(chart.title)
+  ggtitle(chart.title)+theme_classic()
 ```
 
 

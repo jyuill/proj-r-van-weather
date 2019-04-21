@@ -42,7 +42,15 @@ head(vw.new)
 vw.new2 <- vw.new %>%
   rename(date=`Date/Time`)
 colnames(vw.new2)[6] <- "maxtemp"
+colnames(vw.new2)[8] <- 'mintemp'
+colnames(vw.new2)[10] <- 'meantemp'
 ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
+
+vw.latest <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
+ggplot(vw.latest, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
+ggplot(vw.latest, aes(x=date, y=mintemp, color='min'))+geom_line()+
+  geom_line(aes(y=meantemp, color='mean'), size=1.2)+
+  geom_line(aes(y=maxtemp, color='max'))+theme_classic()
 
 ## SELECT columns of interest ####
 vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
