@@ -38,6 +38,7 @@ vw.new$Day <- as.numeric(vw.new$Day)
 summary(vw.new)
 str(vw.new)
 head(vw.new)
+
 ## bar chart of max temp (colnames changed to be easier to work with)
 vw.new2 <- vw.new %>%
   rename(date=`Date/Time`)
@@ -60,16 +61,19 @@ colnames(vw.new.sel)[c(1,5,6,7,8)] <- c('Date','Max.Temp', 'Min.Temp', 'Mean.Tem
 vw.new.sel.last <- vw.new.sel %>% filter(!is.na(Max.Temp), !is.na(Min.Temp), !is.na(Mean.Temp)) %>%
   filter(Date==max(Date))
 vw.new.sel <- vw.new.sel %>% filter(Date<=vw.new.sel.last[[1]])
+## apply season values
+seasons.mth <- read_csv('input/seasons.csv')
+vw.new.sel <- left_join(seasons.mth, vw.new.sel, by='Month')
 
 ## UPDATE EXISTING DATA WITH NEW ####
 ## Load existing data
 vw.exist <- read_csv("input/van-hrbr-weather.csv")
 ## determine most recent data for existing data
 vw.recent <- vw.exist %>% filter(!is.na(Max.Temp)) %>% filter(Date==max(Date))
-vw.exist <- vw.exist %>% filter(Date<=vw.recent[[1]])
+vw.exist <- vw.exist %>% filter(Date<=vw.recent$Date[1])
 
 ## SELECT dates past existing from new data set####
-vw.latest <- vw.new.sel %>% filter(Date>vw.recent[[1]])
+vw.latest <- vw.new.sel %>% filter(Date>vw.recent$Date[1])
 
 ## BIND NEW to existing ####
 vw.all <- bind_rows(vw.exist, vw.latest)

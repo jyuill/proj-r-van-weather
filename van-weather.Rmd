@@ -45,7 +45,10 @@ vw_data <- read_csv("input/van-hrbr-weather.csv")
 ## convert Year, Month to factors for better charting
 vw_data$Year <- as.factor(vw_data$Year)
 vw_data$Month <- as.factor(vw_data$Month)
-#vw_data$Day <- as.factor(vw_data$Day)
+vw_data$Season <- as.factor(vw_data$Season)
+## set Season order
+vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fall"))
+levels(vw_data$Season)
 
 ```
 
@@ -136,7 +139,7 @@ vw.precip.mth.rank
 
 ### Monthly Preciptiation: Ranges
 
-```{r}
+```{r PRECIP MTH BOX}
 ## Distribution of precipitation by month ####
 
 ## Range in precipitation by month ####
@@ -207,6 +210,42 @@ For each month, what has been the pattern in precipitation over the years?
 ## facet_grid is too wide and short unless re-sized
 ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
   facet_grid(Month~.)+
+  theme_bw()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+```
+
+### Seasonal Precipitation
+
+```{r SEASONAL}
+## Monthly precipitation for each season, each year
+vw.precip.seas.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Season) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+
+```
+
+```{r PRECIP SEASON BOX}
+## Distribution of precipitation by season ####
+
+## Range in precipitation by season ####
+chart.title <- "Seasonal Precip. Ranges during Period"
+ggplot(vw.precip.seas.yr, aes(x=Season, y=ttl_precip))+geom_boxplot()+
+  ggtitle(chart.title)+theme_classic()
+
+```
+
+```{r PLOT SEASON YOY, fig.width=5, fig.height=8}
+## show each season side-by-side YoY to see patterns, highs, lows
+
+## facet_wrap is condensed but too many years to be able to read x axis
+# ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+#   facet_wrap(Month~.)+
+#   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+## facet_grid is too wide and short unless re-sized
+ggplot(vw.precip.seas.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+  facet_grid(Season~.)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 ```
