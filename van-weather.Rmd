@@ -70,7 +70,7 @@ Check Data Relationships
 * uses PerformanceAnalytics package
 
 ```{r DATA RELATIONSHIPS}
-chart.Correlation(vw_data[,c(5,6,7,8)], histogram = TRUE)
+chart.Correlation(vw_data[,c(7:10)], histogram = TRUE)
 
 ```
 
@@ -219,7 +219,7 @@ ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
 ```{r SEASONAL}
 ## Monthly precipitation for each season, each year
 vw.precip.seas.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
-  group_by(Year, Season) %>%
+  group_by(Season.Yr, Season) %>%
   summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
             precip_days=sum(precip.day, na.rm=TRUE))
 
@@ -244,10 +244,45 @@ ggplot(vw.precip.seas.yr, aes(x=Season, y=ttl_precip))+geom_boxplot()+
 #   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 
 ## facet_grid is too wide and short unless re-sized
-ggplot(vw.precip.seas.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+ggplot(vw.precip.seas.yr, aes(x=Season.Yr, y=ttl_precip))+geom_bar(stat='identity')+
   facet_grid(Season~.)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+```
+
+### Seasonal Precipitation Annual Ranking
+
+```{r PLOT SEASONS RANKED, fig.height=3}
+## filter for each season and plot ranked years
+## use facet as convenient way to label the chart with season
+vw.precip.seas.yr %>% filter(Season=='Winter') %>%
+ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+  geom_bar(stat='identity')+
+  facet_grid(.~Season)+
+  theme_bw()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+vw.precip.seas.yr %>% filter(Season=='Spring') %>%
+ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+  geom_bar(stat='identity')+
+  facet_grid(.~Season)+
+  theme_bw()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+vw.precip.seas.yr %>% filter(Season=='Summer') %>%
+ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+  geom_bar(stat='identity')+
+  facet_grid(.~Season)+
+  theme_bw()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+vw.precip.seas.yr %>% filter(Season=='Fall') %>%
+ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+  geom_bar(stat='identity')+
+  facet_grid(.~Season)+
+  theme_bw()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
 ```
 
 ## Temperature
@@ -365,4 +400,7 @@ ggplot(vw.temp.mth.yr, aes(x=Year, y=ave_temp))+geom_col()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
   
 ```
+
+
+
 

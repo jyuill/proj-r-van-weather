@@ -50,15 +50,15 @@ colnames(vw.new2)[10] <- 'meantemp'
 ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
 
 ## most recent week
-vw.latest <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
+vw.latest.wk <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
 ## bar chart max temp
-ggplot(vw.latest, aes_string(x="date", y="maxtemp"))+
+ggplot(vw.latest.wk, aes_string(x="date", y="maxtemp"))+
   geom_bar(stat='identity')+
   scale_y_continuous(expand=c(0,0))+
   scale_x_date(date_breaks='1 day')+
   theme_classic()
 ## line chart
-ggplot(vw.latest, aes(x=date, y=mintemp, color='min'))+geom_line()+
+ggplot(vw.latest.wk, aes(x=date, y=mintemp, color='min'))+geom_line()+
   geom_line(aes(y=meantemp, color='mean'), size=1.2)+
   geom_line(aes(y=maxtemp, color='max'))+
   scale_x_date(date_breaks='1 day')+
@@ -75,12 +75,22 @@ vw.new.sel <- vw.new.sel %>% filter(Date<=vw.new.sel.last[[1]])
 ## apply season values
 seasons.mth <- read_csv('input/seasons.csv')
 vw.new.sel <- left_join(seasons.mth, vw.new.sel, by='Month')
+## set season yr: Dec falls into Winter of following yr
+vw.new.sel <- vw.new.sel %>% mutate(
+  Season.Yr=ifelse(Month==12,Year+1,Year))
 
 ## UPDATE EXISTING DATA WITH NEW ####
 ## Load existing data
 vw.exist <- read_csv("input/van-hrbr-weather.csv")
+# vw.exist <- vw.exist %>% mutate(
+#   Season.Yr=ifelse(Month==12,Year+1,Year))
+#vw.exist.ws <- vw.exist %>% filter(Month==1, Season=='Winter')
+#vw.exist <- vw.exist %>% select(1,2,Season.Yr,3:9)
 ## determine most recent data for existing data
-vw.recent <- vw.exist %>% filter(!is.na(Max.Temp)) %>% filter(Date==max(Date))
+## this looks circular: determine most recent date then filter for
+## everything before most recent date? maybe some cleanup?
+vw.recent <- vw.exist %>% filter(!is.na(Max.Temp)) %>% 
+  filter(Date==max(Date))
 vw.exist <- vw.exist %>% filter(Date<=vw.recent$Date[1])
 
 ## SELECT dates past existing from new data set####
