@@ -34,24 +34,35 @@ vw.new <- read_csv(file_save_url, skip=25)
 vw.new$Month <- as.numeric(vw.new$Month)
 vw.new$Day <- as.numeric(vw.new$Day)
 
-## check imported data
+## SUMMARY: check imported data ####
 summary(vw.new)
 str(vw.new)
 head(vw.new)
 
+## CHARTS: check imported data ####
 ## bar chart of max temp (colnames changed to be easier to work with)
 vw.new2 <- vw.new %>%
   rename(date=`Date/Time`)
 colnames(vw.new2)[6] <- "maxtemp"
 colnames(vw.new2)[8] <- 'mintemp'
 colnames(vw.new2)[10] <- 'meantemp'
+## full current year: maxtemp
 ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
 
+## most recent week
 vw.latest <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
-ggplot(vw.latest, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
+## bar chart max temp
+ggplot(vw.latest, aes_string(x="date", y="maxtemp"))+
+  geom_bar(stat='identity')+
+  scale_y_continuous(expand=c(0,0))+
+  scale_x_date(date_breaks='1 day')+
+  theme_classic()
+## line chart
 ggplot(vw.latest, aes(x=date, y=mintemp, color='min'))+geom_line()+
   geom_line(aes(y=meantemp, color='mean'), size=1.2)+
-  geom_line(aes(y=maxtemp, color='max'))+theme_classic()
+  geom_line(aes(y=maxtemp, color='max'))+
+  scale_x_date(date_breaks='1 day')+
+  theme_classic()
 
 ## SELECT columns of interest ####
 vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
