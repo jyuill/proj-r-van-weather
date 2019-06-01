@@ -56,13 +56,15 @@ ggplot(vw.latest.wk, aes_string(x="date", y="maxtemp"))+
   geom_bar(stat='identity')+
   scale_y_continuous(expand=c(0,0))+
   scale_x_date(date_breaks='1 day')+
-  theme_classic()
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
 ## line chart
 ggplot(vw.latest.wk, aes(x=date, y=mintemp, color='min'))+geom_line()+
   geom_line(aes(y=meantemp, color='mean'), size=1.2)+
   geom_line(aes(y=maxtemp, color='max'))+
   scale_x_date(date_breaks='1 day')+
-  theme_classic()
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
 
 ## SELECT columns of interest ####
 vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]

@@ -16,6 +16,9 @@ library(PerformanceAnalytics)
 library(lubridate)
 library(plotly)
 
+## chart colors
+color.line <- 'grey70'
+
 ```
 
 # Intro {.tabset}
@@ -126,7 +129,9 @@ ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
 ## Ave precip by month in order
 chart.title <- "Months Ranked by Ave. Precipitation"
 ggplot(vw.precip.mth, aes(x=reorder(Month, -ave_precip), y=ave_precip))+geom_col()+
-  ggtitle(chart.title)+theme_classic()
+  geom_hline(yintercept = mean(vw.precip.mth$ave_precip), linetype='dashed', color=color.line)+
+  labs(title=chart.title, subtitle = '(Dashed line is average)')+
+  theme_classic()
 
 ```
 
@@ -170,7 +175,7 @@ recentXyr <- 12
 vw.precip.mth.curr.recent <- vw.precip.mth.curr[1:recentXyr,]
 chart.title <- paste0(curr.mth, " Rain for each Year (last ",recentXyr, " years - with ave.)")
 ggplot(vw.precip.mth.curr.recent, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
-  geom_hline(yintercept=mean(vw.precip.mth.curr.recent$ttl_precip), linetype='dashed')+
+  geom_hline(yintercept=mean(vw.precip.mth.curr.recent$ttl_precip), linetype='dashed', color=color.line)+
   scale_y_continuous(expand=c(0,0))+theme_classic()+
   ggtitle(chart.title)
 
@@ -182,8 +187,9 @@ vw.precip.mth.curr.top <- vw.precip.mth.curr[1:topXyr,]
 
 chart.title <- paste0(curr.mth, " Ranked by Precipitation (top ",topXyr," yrs)")
 ggplot(vw.precip.mth.curr.top, aes(x=reorder(Year, -ttl_precip), y=ttl_precip))+geom_col()+
+  geom_hline(yintercept = mean(vw.precip.mth.curr.top$ttl_precip), linetype='dashed', color=color.line)+
   scale_y_continuous(expand=c(0,0))+theme_classic()+
-  ggtitle(chart.title)
+  labs(title=chart.title, subtitle='(Line is average)')
 
 ## get percentiles for current mth
 vw.precip.mth.curr.pc <- vw.precip.mth.curr %>% ungroup() %>% arrange(ttl_precip) %>%
@@ -209,6 +215,7 @@ For each month, what has been the pattern in precipitation over the years?
 
 ## facet_grid is too wide and short unless re-sized
 ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
+  geom_hline(data=vw.precip.mth, aes(yintercept=ave_precip), linetype='dashed', color=color.line)+
   facet_grid(Month~.)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
@@ -216,12 +223,33 @@ ggplot(vw.precip.mth.yr, aes(x=Year, y=ttl_precip))+geom_bar(stat='identity')+
 
 ### Seasonal Precipitation
 
-```{r SEASONAL}
+#### Season definitions:
+
+* Winter: Dec, Jan, Feb
+* Spring: Mar, Apr, May
+* Summer: Jun, Jul, Aug
+* Fall: Sep, Oct, Nov
+
+*Note: the year for a winter season is applied to year at end of season. So winter from Dec 2018 to Feb 2019 is considered winter of 2019.*
+
+```{r SEASONAL DATA}
 ## Monthly precipitation for each season, each year
 vw.precip.seas.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
   group_by(Season.Yr, Season) %>%
   summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
             precip_days=sum(precip.day, na.rm=TRUE))
+
+## Monthly summary data for each season
+vw.precip.seas <- vw.precip.seas.yr %>% group_by(Season) %>%
+  summarize(mean.precip=mean(ttl_precip),
+          median.precip=median(ttl_precip),
+          mean_precip_days=mean(precip_days),
+          median.precip=median(precip_days))
+
+## get current year seasonal data for comparison via dots
+vw.precip.seas.yr.current <- vw.precip.seas.yr %>% filter(
+ Season.Yr==year(Sys.Date())
+)
 
 ```
 
@@ -231,6 +259,7 @@ vw.precip.seas.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %
 ## Range in precipitation by season ####
 chart.title <- "Seasonal Precip. Ranges during Period"
 ggplot(vw.precip.seas.yr, aes(x=Season, y=ttl_precip))+geom_boxplot()+
+  geom_point(data=vw.precip.seas.yr.current, aes(x=Season, y=ttl_precip),shape=18, color='red', size=5)+
   ggtitle(chart.title)+theme_classic()
 
 ```
@@ -245,6 +274,7 @@ ggplot(vw.precip.seas.yr, aes(x=Season, y=ttl_precip))+geom_boxplot()+
 
 ## facet_grid is too wide and short unless re-sized
 ggplot(vw.precip.seas.yr, aes(x=Season.Yr, y=ttl_precip))+geom_bar(stat='identity')+
+  geom_hline(data=vw.precip.seas, aes(yintercept=mean.precip), linetype='dashed', color=color.line)+
   facet_grid(Season~.)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
@@ -252,33 +282,48 @@ ggplot(vw.precip.seas.yr, aes(x=Season.Yr, y=ttl_precip))+geom_bar(stat='identit
 
 ### Seasonal Precipitation Annual Ranking
 
+* Need separate charts because each season ranked individually
+* Line = median
+
 ```{r PLOT SEASONS RANKED, fig.height=3}
 ## filter for each season and plot ranked years
 ## use facet as convenient way to label the chart with season
-vw.precip.seas.yr %>% filter(Season=='Winter') %>%
-ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+## reference line for median
+vw.precip.s <- vw.precip.seas.yr %>% filter(Season=='Winter')
+ggplot(vw.precip.s, aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
   geom_bar(stat='identity')+
+  geom_hline(yintercept=median(vw.precip.s$ttl_precip), linetype='dashed', color=color.line)+
   facet_grid(.~Season)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 
-vw.precip.seas.yr %>% filter(Season=='Spring') %>%
-ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+# vw.precip.seas.yr %>% filter(Season=='Spring') %>%
+# ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+#   geom_bar(stat='identity')+
+#   facet_grid(.~Season)+
+#   theme_bw()+
+#   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
+
+vw.precip.s <- vw.precip.seas.yr %>% filter(Season=='Spring')
+ggplot(vw.precip.s, aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
   geom_bar(stat='identity')+
+  geom_hline(yintercept=median(vw.precip.s$ttl_precip), linetype='dashed', color=color.line)+
   facet_grid(.~Season)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 
-vw.precip.seas.yr %>% filter(Season=='Summer') %>%
-ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+vw.precip.s <- vw.precip.seas.yr %>% filter(Season=='Summer')
+ggplot(vw.precip.s, aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
   geom_bar(stat='identity')+
+  geom_hline(yintercept=median(vw.precip.s$ttl_precip), linetype='dashed', color=color.line)+
   facet_grid(.~Season)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
 
-vw.precip.seas.yr %>% filter(Season=='Fall') %>%
-ggplot(aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
+vw.precip.s <- vw.precip.seas.yr %>% filter(Season=='Fall')
+ggplot(vw.precip.s, aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
   geom_bar(stat='identity')+
+  geom_hline(yintercept=median(vw.precip.s$ttl_precip), linetype='dashed', color=color.line)+
   facet_grid(.~Season)+
   theme_bw()+
   theme(axis.text.x  = element_text(angle=90, vjust=0.5))
@@ -401,6 +446,13 @@ ggplot(vw.temp.mth.yr, aes(x=Year, y=ave_temp))+geom_col()+
   
 ```
 
+### Seasonal Temperatures
 
+#### Season definitions:
 
+* Winter: Dec, Jan, Feb
+* Spring: Mar, Apr, May
+* Summer: Jun, Jul, Aug
+* Fall: Sep, Oct, Nov
 
+*Note: the year for a winter season is applied to year at end of season. So winter from Dec 2018 to Feb 2019 is considered winter of 2019.*
