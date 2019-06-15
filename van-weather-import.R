@@ -112,6 +112,7 @@ table(duplicated(vw.all$Date))
 
 ## SAVE ####
 write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
+write_csv(vw.all, paste0("input/van-hrbr-weather_",Sys.Date(),".csv"))
 
 
 ###\\\\\\\\\\\\\\\\\\\\
