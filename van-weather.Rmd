@@ -347,6 +347,56 @@ ggplot(vw.temp.yr, aes(x=Year, y=mean.mean, group=1))+geom_line()+
 
 ```
 
+* Obvious outliers 1988, 1989, 2011: shown down below, temperature data is missing for multiple months, bringing ave. temp way down. Best to discard. 
+* Could use more sophisticated imputation of missing values, such as using averages, to preserve data for other months in those years
+
+```{r FILTER YRS}
+## check for years with missing data
+#table(vw_data$Year, is.na(vw_data$Mean.Temp))
+
+## exclude years with missing data - including current yr
+vw.temp.yr.x <- vw.temp.yr %>% filter(Year!=1988 & Year!=1989 &
+                                        Year!=1990 &
+                                          Year!=2007 & 
+                                        Year!=2010 &
+                                        Year!=2011 &
+                                          Year!=year(Sys.Date()))
+
+## line chart - note need group=1 so ggplot knows how to connect data points for line
+chart.title <- 'Ave. Daily Temp by Year, with Trend (excl. missing data)'
+ggplot(vw.temp.yr.x, aes(x=Year, y=mean.mean, group=1))+geom_line()+
+  geom_smooth(method='lm')+theme_classic()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))+
+  labs(title=chart.title, y='Ave. Daily Temp', x='')
+
+## remove missing years from original data set, since all the code below was
+## developed in reference to vw.temp.yr
+vw.temp.yr <- vw.temp.yr.x
+
+```
+
+#### Years Ranked by Average Daily Temp
+
+```{r RANK BY YEAR}
+## get last yr data
+vw.temp.yr.last <- vw.temp.yr %>% filter(Year==year(Sys.Date())-1)
+
+## bar chart - years ranked in order of ave daily temp
+chart.title <- 'Years in Order of Ave. Daily Temp. (excl. missing data)'
+ggplot(vw.temp.yr, aes(x=reorder(Year, -mean.mean), y=mean.mean))+
+  geom_col()+
+  #geom_col(data=vw.temp.yr.last, aes(x=Year, y=mean.mean, fill='last yr'))+
+  geom_col(data=vw.temp.yr.last, aes(x=Year, y=mean.mean), fill='blue')+
+  scale_y_continuous(expand=c(0,0))+
+  theme_classic()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))+
+  labs(title=chart.title,
+       subtitle='Most recent yr in blue', y='Ave. Daily Temp', x='')
+  
+#geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, #color='red', size=5)+
+```
+
+
 #### Linear model of annual temperature change
 
 ```{r ANNUAL TEMP MODEL}
@@ -386,7 +436,7 @@ ggplot(vw.temp.yr, aes(x=Year, y=mean.mean, group=1))+
 
 Linear modelling for max and min
 
-```{r}
+```{r MAX TEMP MODEL}
 at.model <- lm(mean.max~ynum, vw.temp.yr)
 
 summary(at.model)
@@ -403,7 +453,7 @@ Model interpretation: <br />
 * P-value for statistical significance: `r pval`
 * Temperature change is *`r statsig`* over this period
 
-```{r}
+```{r MIN TEMP MODEL}
 at.model <- lm(mean.min~ynum, vw.temp.yr)
 
 summary(at.model)
