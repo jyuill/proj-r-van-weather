@@ -332,6 +332,94 @@ ggplot(vw.precip.s, aes(x=reorder(Season.Yr,-ttl_precip), y=ttl_precip))+
 
 ## Temperature
 
+### Ave. Annual Temperature
+
+```{r ANNUAL TEMP}
+## get ave of mean, min, max daily temp by year
+vw.temp.yr <- vw_data %>% group_by(Year) %>% summarize(mean.mean=mean(Mean.Temp, na.rm=TRUE),                                 mean.min=mean(Min.Temp, na.rm=TRUE),                                 mean.max=mean(Max.Temp, na.rm=TRUE))
+
+## line chart - note need group=1 so ggplot knows how to connect data points for line
+chart.title <- 'Ave. Daily Temp by Year, with Trend'
+ggplot(vw.temp.yr, aes(x=Year, y=mean.mean, group=1))+geom_line()+
+  geom_smooth(method='lm')+theme_classic()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))+
+  labs(title=chart.title, y='Ave. Daily Temp', x='')
+
+```
+
+#### Linear model of annual temperature change
+
+```{r ANNUAL TEMP MODEL}
+vw.temp.yr <- vw.temp.yr %>% mutate(
+  yr=as.character(Year),
+  ynum=as.numeric(yr)
+)
+at.model <- lm(mean.mean~ynum, vw.temp.yr)
+
+summary(at.model)
+
+slope <- summary(at.model)$coefficients[2,1]
+pval <- summary(at.model)$coefficients[2,4]
+
+statsig <- ifelse(pval<0.05,'statistically significant','not statistically significant')
+```
+
+Model interpretation: <br />
+
+* Average daily temperature changing `r slope` degrees each yr.
+* P-value for statistical significance: `r pval`
+* Temperature change is *`r statsig`* over this period
+
+#### Look at Average Daily Maximum and Minimums for each Year
+
+```{r MEAN MIN MAX TEMP}
+chart.title <- 'Ave. Daily Temp by Year, with Trend'
+ggplot(vw.temp.yr, aes(x=Year, y=mean.mean, group=1))+
+  geom_line()+
+  geom_line(aes(y=mean.max))+
+  geom_line(aes(y=mean.min))+
+  geom_smooth(method='lm')+
+  theme_classic()+
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5))+
+  labs(title=chart.title, y='Ave. Daily Temp', x='')
+```
+
+Linear modelling for max and min
+
+```{r}
+at.model <- lm(mean.max~ynum, vw.temp.yr)
+
+summary(at.model)
+
+slope <- summary(at.model)$coefficients[2,1]
+pval <- summary(at.model)$coefficients[2,4]
+
+statsig <- ifelse(pval<0.05,'statistically significant','not statistically significant')
+```
+
+Model interpretation: <br />
+
+* Average daily MAX temperature changing `r slope` degrees each yr.
+* P-value for statistical significance: `r pval`
+* Temperature change is *`r statsig`* over this period
+
+```{r}
+at.model <- lm(mean.min~ynum, vw.temp.yr)
+
+summary(at.model)
+
+slope <- summary(at.model)$coefficients[2,1]
+pval <- summary(at.model)$coefficients[2,4]
+
+statsig <- ifelse(pval<0.05,'statistically significant','not statistically significant')
+```
+
+Model interpretation: <br />
+
+* Average daily MIN temperature changing `r slope` degrees each yr.
+* P-value for statistical significance: `r pval`
+* Temperature change is *`r statsig`* over this period
+
 ### Monthly average temperature
 
 ```{r MONTHLY TEMP}
