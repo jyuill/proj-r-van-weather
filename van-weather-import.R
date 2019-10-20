@@ -30,7 +30,10 @@ file_save_url <- paste0("~/../Google Drive/Data/van-hrbr-weather-eng-daily-0101"
 ## download and save file
 download.file(url=data_url, destfile = file_save_url)
 ## import file into R - skip heading rows
-vw.new <- read_csv(file_save_url, skip=25)
+## FILE STRUCTURE CHG OCT 2019
+#vw.new <- read_csv(file_save_url, skip=25)
+## NEW DATA STRUCTURE DOESN'T NEED SKIP
+vw.new <- read_csv(file_save_url)
 vw.new$Month <- as.numeric(vw.new$Month)
 vw.new$Day <- as.numeric(vw.new$Day)
 
@@ -43,9 +46,10 @@ head(vw.new)
 ## bar chart of max temp (colnames changed to be easier to work with)
 vw.new2 <- vw.new %>%
   rename(date=`Date/Time`)
-colnames(vw.new2)[6] <- "maxtemp"
-colnames(vw.new2)[8] <- 'mintemp'
-colnames(vw.new2)[10] <- 'meantemp'
+colnames(vw.new2)[10] <- "maxtemp"
+colnames(vw.new2)[12] <- 'mintemp'
+colnames(vw.new2)[14] <- 'meantemp'
+
 ## full current year: maxtemp
 ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
 
@@ -67,9 +71,19 @@ ggplot(vw.latest.wk, aes(x=date, y=mintemp, color='min'))+geom_line()+
   theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
 
 ## SELECT columns of interest ####
-vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
+#vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
+vw.new.sel <- vw.new2 %>% select(date, Year, Month, Day,
+                                 maxtemp, mintemp, meantemp,
+                                 `Total Precip (mm)`)
 ## CLEAN up col names ####
-colnames(vw.new.sel)[c(1,5,6,7,8)] <- c('Date','Max.Temp', 'Min.Temp', 'Mean.Temp', 'Total.Precip')
+#colnames(vw.new.sel)[c(1,5,6,7,8)] <- c('Date','Max.Temp', 'Min.Temp', 'Mean.Temp', 'Total.Precip')
+vw.new.sel <- vw.new.sel %>% rename(
+  Date=date,
+  Max.Temp=maxtemp,
+  Min.Temp=mintemp,
+  Mean.Temp=meantemp,
+  Total.Precip=`Total Precip (mm)`
+)
 ## drop empty rows at end
 vw.new.sel.last <- vw.new.sel %>% filter(!is.na(Max.Temp), !is.na(Min.Temp), !is.na(Mean.Temp)) %>%
   filter(Date==max(Date))
