@@ -22,7 +22,7 @@ library(tidyverse)
 ### SHORTCUT VERSION -> DIRECT DOWNLOAD ####
 ## 1. Generate URL that matches Vancouver Harbour download page for specified year:
 ## year for data
-yr <- 2019
+yr <- 2020
 ## data url
 data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=888&Year=",yr,"&Month=12&Day=1&timeframe=2&submit=Download+Data")
 ## destination to save file
@@ -126,7 +126,8 @@ table(duplicated(vw.all$Date))
 
 ## SAVE ####
 write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
-write_csv(vw.all, paste0("input/van-hrbr-weather_",Sys.Date(),".csv"))
+#write_csv(vw.all, paste0("input/van-hrbr-weather_",Sys.Date(),".csv"))
+write_csv(vw.all, paste0("input/van-hrbr-weather_",max(vw.all$Date),".csv"))
 
 
 ###\\\\\\\\\\\\\\\\\\\\ NOT NEEDED FOR REGULAR USE
