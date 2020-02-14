@@ -562,7 +562,9 @@ vw.temp.mth.yr$Month <- as.integer(vw.temp.mth.yr$Month)
 plot.mth.yr <- ggplot(vw.temp.mth.yr, aes(x=Month, y=ave_temp, color=Year))+geom_line()+scale_x_continuous(breaks=c(1:12))+
   theme_classic()+ggtitle(chart.title)
 ## use plotly for interaction such as highlight specific years
-ggplotly(plot.mth.yr)
+#ggplotly(plot.mth.yr)
+## LOOKS LIKE PLOTLY DOESN'T WORK FOR MARKDOWN FOR GIT
+plot.mth.yr
 
 ```
 
