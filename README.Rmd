@@ -62,6 +62,8 @@ levels(vw_data$Season)
 
 ## Precipitation 
 
+**NOTE:** precipitation data not available for 2020 so far. :(
+
 ### Daily precipitation for current month
 
 ```{r DAILY CURR MTH PRECIP, fig.height=2, fig.width=5}
@@ -74,7 +76,7 @@ ggplot(vw_data_curr_m, aes(x=Date, y=Total.Precip))+
 
 ## check for missing
 if(anyNA(vw_data_curr_m$Total.Precip)){
-  msg.missing <- "Data missing for some days."
+  msg.missing <- "Data missing."
 } else {
   msg.missing <- "No data missing"
 }

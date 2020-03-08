@@ -24,16 +24,18 @@ Data is collected from Govt of Canada website:
 
     ## [1] "Winter" "Spring" "Summer" "Fall"
 
-**Earliest date:** *1988-01-01* <br /> **Most recent date:** *2020-02-13*
+**Earliest date:** *1988-01-01* <br /> **Most recent date:** *2020-03-07*
 
 Precipitation
 -------------
+
+**NOTE:** precipitation data not available for 2020 so far. :(
 
 ### Daily precipitation for current month
 
 ![](README_files/figure-markdown_github/DAILY%20CURR%20MTH%20PRECIP-1.png)
 
-Data status: Data missing for some days.
+Data status: Data missing.
 
 ### Monthly precipitation data: Averages
 

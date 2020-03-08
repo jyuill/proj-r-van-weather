@@ -4,6 +4,7 @@
 ## check summary on Date (code below) to ensure most recent data obtained
 
 library(tidyverse)
+library(googledrive)
 #library(httr)
 
 ### FULL MANUAL VERSION - skip to SHORTCUT section below for DIRECT DOWNLOAD ####
@@ -25,8 +26,8 @@ library(tidyverse)
 yr <- 2020
 ## data url
 data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=888&Year=",yr,"&Month=12&Day=1&timeframe=2&submit=Download+Data")
-## destination to save file
-file_save_url <- paste0("~/../Google Drive/Data/van-hrbr-weather-eng-daily-0101",yr,"-1231",yr,".csv")
+## destination to save file SHOULD CONVERT TO USING GDRIVE ID
+file_save_url <- paste0("~/../Google Drive/01 MyProHQ/Raw-Data/van-hrbr-weather-eng-daily-0101",yr,"-1231",yr,".csv")
 ## download and save file
 download.file(url=data_url, destfile = file_save_url)
 ## import file into R - skip heading rows
@@ -52,6 +53,8 @@ colnames(vw.new2)[14] <- 'meantemp'
 
 ## full current year: maxtemp
 ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
+## full yr: precip
+ggplot(vw.new2, aes(x=date, y=`Total Precip (mm)`))+geom_bar(stat='identity')
 
 ## most recent week
 vw.latest.wk <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
@@ -62,14 +65,22 @@ ggplot(vw.latest.wk, aes_string(x="date", y="maxtemp"))+
   scale_x_date(date_breaks='1 day')+
   theme_classic()+
   theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
+## precip
+ggplot(vw.latest.wk, aes(x=date, y=`Total Precip (mm)`))+
+  geom_bar(stat='identity')+
+  scale_y_continuous(expand=c(0,0))+
+  scale_x_date(date_breaks='1 day')+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
+
 ## line chart
+## temp
 ggplot(vw.latest.wk, aes(x=date, y=mintemp, color='min'))+geom_line()+
   geom_line(aes(y=meantemp, color='mean'), size=1.2)+
   geom_line(aes(y=maxtemp, color='max'))+
   scale_x_date(date_breaks='1 day')+
   theme_classic()+
   theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
-
 ## SELECT columns of interest ####
 #vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
 vw.new.sel <- vw.new2 %>% select(date, Year, Month, Day,
@@ -129,9 +140,10 @@ write.csv(vw.all, "input/van-hrbr-weather.csv", row.names = FALSE)
 #write_csv(vw.all, paste0("input/van-hrbr-weather_",Sys.Date(),".csv"))
 write_csv(vw.all, paste0("input/van-hrbr-weather_",max(vw.all$Date),".csv"))
 
+## END REG. UPDATE ###################################
 
 ###\\\\\\\\\\\\\\\\\\\\ NOT NEEDED FOR REGULAR USE
-## LOOP FOR MULTIPLE YEARS OF HISTORICAL DATA ####
+## X LOOP FOR MULTIPLE YEARS OF HISTORICAL DATA ####
 # yr_start <- 1988
 # yr_end <- 1998
 # 
