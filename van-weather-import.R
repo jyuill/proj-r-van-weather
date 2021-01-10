@@ -29,8 +29,8 @@ library(googledrive)
 ## STATION 
 ## need station id; get from saved file
 stn_info <- read_csv('input/1-van-weather-stations.csv')
-#stn <- "VANCOUVER INTL A" ## main current station
-stn <- "VANCOUVER INT'L A"
+stn <- "VANCOUVER INTL A" ## main current station
+#stn <- "VANCOUVER INT'L A" ## for pre-2013 data
 ## get stn id from name
 stn_id <- stn_info %>% filter(name==stn) %>% select(id)
 ## clean stn name for inclusion in file save name
@@ -39,8 +39,8 @@ stn_clean <- str_replace_all(stn_clean,"'","")
 ## YEAR
 ## year for data -> date is set to 12-31 of selected yr; will collect whatever is available
 ## if current yr (or any single yr) set start and end to current yr
-yr_start <- 1970
-yr_end <- 1983
+yr_start <- 2021
+yr_end <- 2021
 
 ## DATA COLLECTION LOOP #### 
 ## empty data frame to hold data from each loop cycle
@@ -203,7 +203,6 @@ if(!file.exists(paste0("output/",stn_clean,"-weather.csv"))){
 
 ## check dates
 summary(vw.all$Date)
-
 
 ## test for duplicated dates
 table(duplicated(vw.all$Date))
