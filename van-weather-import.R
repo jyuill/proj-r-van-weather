@@ -177,7 +177,7 @@ yr_data <- yr_data+1
 
 ## check dates
 summary(vw_all_yrs$Date)
-#vw_all_yrs <- vw_all_yrs %>% filter(Date>'2013-06-12')
+vw_all_yrs <- vw_all_yrs %>% filter(!is.na(Date))
 
 ## SAVE all yrs data
 write_csv(vw_all_yrs, paste0("output/",stn_clean,"-weather-",min(vw_all_yrs$Year),"-",max(vw_all_yrs$Year),".csv"))
@@ -197,8 +197,8 @@ if(!file.exists(paste0("output/",stn_clean,"-weather.csv"))){
   vw.all <- bind_rows(vw.exist, vw_latest)
   ## compare MIN data existing with MIN date new
   vw_earliest <- vw_all_yrs %>% filter(Date<min(vw.exist$Date))
-  ## ADD earliest BEFORE existing
-  vw.all <- bind_rows(vw_earliest, vw.exist)
+  ## ADD earliest BEFORE existing (which is now vw.all)
+  vw.all <- bind_rows(vw_earliest, vw.all)
 }
 
 ## check dates
