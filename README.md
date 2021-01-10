@@ -16,7 +16,7 @@ Data Collection
 Data is collected from Govt of Canada website:
 
 1.  search: <http://climate.weather.gc.ca/historical_data/search_historic_data_e.html>
-2.  specify station as containing 'vancouver harbour'
+2.  specify station as containing 'vancouver'; best is VANCOUVER INTL A
 3.  select 'daily', select 'year'
 4.  'Go' goes to a page to access results for year
 
@@ -24,7 +24,7 @@ Data is collected from Govt of Canada website:
 
     ## [1] "Winter" "Spring" "Summer" "Fall"
 
-**Earliest date:** *1988-01-01* <br /> **Most recent date:** *2020-03-07*
+**Earliest date:** *1970-01-01* <br /> **Most recent date:** *2021-01-08*
 
 Precipitation
 -------------
@@ -35,7 +35,7 @@ Precipitation
 
 ![](README_files/figure-markdown_github/DAILY%20CURR%20MTH%20PRECIP-1.png)
 
-Data status: Data missing.
+Data status: No data missing
 
 ### Monthly precipitation data: Averages
 
@@ -95,23 +95,25 @@ Temperature
     ## lm(formula = mean.mean ~ ynum, data = vw.temp.yr)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -1.06271 -0.44340 -0.01888  0.45964  1.06865 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.3887 -0.2271  0.0146  0.4724  1.0994 
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)
-    ## (Intercept) 16.560090  25.469955   0.650    0.522
-    ## ynum        -0.002517   0.012706  -0.198    0.845
+    ##               Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept) -20.472692  14.954661  -1.369   0.1771  
+    ## ynum          0.015382   0.007494   2.053   0.0454 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.5623 on 24 degrees of freedom
-    ## Multiple R-squared:  0.001632,   Adjusted R-squared:  -0.03997 
-    ## F-statistic: 0.03923 on 1 and 24 DF,  p-value: 0.8447
+    ## Residual standard error: 0.811 on 50 degrees of freedom
+    ## Multiple R-squared:  0.07771,    Adjusted R-squared:  0.05926 
+    ## F-statistic: 4.213 on 1 and 50 DF,  p-value: 0.04537
 
 Model interpretation: <br />
 
--   Average daily temperature changing -0.0025166 degrees each yr.
--   P-value for statistical significance: 0.8446646
--   Temperature change is *not statistically significant* over this period
+-   Average daily temperature changing 0.0153817 degrees each yr.
+-   P-value for statistical significance: 0.0453698
+-   Temperature change is *statistically significant* over this period
 
 #### Look at Average Daily Maximum and Minimums for each Year
 
@@ -124,22 +126,22 @@ Linear modelling for max and min
     ## lm(formula = mean.max ~ ynum, data = vw.temp.yr)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -1.22083 -0.36492 -0.06269  0.44222  1.23017 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.1920 -0.2736  0.0399  0.4654  1.0775 
     ## 
     ## Coefficients:
     ##              Estimate Std. Error t value Pr(>|t|)
-    ## (Intercept) 17.572393  28.058085   0.626    0.537
-    ## ynum        -0.001481   0.013997  -0.106    0.917
+    ## (Intercept) -2.778343  16.866586  -0.165    0.870
+    ## ynum         0.008279   0.008452   0.980    0.332
     ## 
-    ## Residual standard error: 0.6195 on 24 degrees of freedom
-    ## Multiple R-squared:  0.0004662,  Adjusted R-squared:  -0.04118 
-    ## F-statistic: 0.01119 on 1 and 24 DF,  p-value: 0.9166
+    ## Residual standard error: 0.9147 on 50 degrees of freedom
+    ## Multiple R-squared:  0.01883,    Adjusted R-squared:  -0.0007932 
+    ## F-statistic: 0.9596 on 1 and 50 DF,  p-value: 0.332
 
 Model interpretation: <br />
 
--   Average daily MAX temperature changing -0.0014809 degrees each yr.
--   P-value for statistical significance: 0.9166207
+-   Average daily MAX temperature changing 0.0082795 degrees each yr.
+-   P-value for statistical significance: 0.3320093
 -   Temperature change is *not statistically significant* over this period
 
 <!-- -->
@@ -149,23 +151,25 @@ Model interpretation: <br />
     ## lm(formula = mean.min ~ ynum, data = vw.temp.yr)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -0.89858 -0.43410  0.00637  0.48331  0.86790 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.5647 -0.3271  0.0135  0.4832  1.2072 
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error t value Pr(>|t|)
-    ## (Intercept) 13.705786  24.941836   0.550    0.588
-    ## ynum        -0.002663   0.012443  -0.214    0.832
+    ##               Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept) -38.230592  13.485235  -2.835  0.00660 **
+    ## ynum          0.022493   0.006758   3.328  0.00164 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.5507 on 24 degrees of freedom
-    ## Multiple R-squared:  0.001905,   Adjusted R-squared:  -0.03968 
-    ## F-statistic: 0.0458 on 1 and 24 DF,  p-value: 0.8324
+    ## Residual standard error: 0.7314 on 50 degrees of freedom
+    ## Multiple R-squared:  0.1814, Adjusted R-squared:  0.165 
+    ## F-statistic: 11.08 on 1 and 50 DF,  p-value: 0.001645
 
 Model interpretation: <br />
 
--   Average daily MIN temperature changing -0.0026628 degrees each yr.
--   P-value for statistical significance: 0.8323547
--   Temperature change is *not statistically significant* over this period
+-   Average daily MIN temperature changing 0.0224927 degrees each yr.
+-   P-value for statistical significance: 0.0016445
+-   Temperature change is *statistically significant* over this period
 
 ### Monthly average temperature
 
