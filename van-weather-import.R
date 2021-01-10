@@ -29,7 +29,8 @@ library(googledrive)
 ## STATION 
 ## need station id; get from saved file
 stn_info <- read_csv('input/1-van-weather-stations.csv')
-stn <- "VANCOUVER INTL A"
+#stn <- "VANCOUVER INTL A" ## main current station
+stn <- "VANCOUVER INT'L A"
 ## get stn id from name
 stn_id <- stn_info %>% filter(name==stn) %>% select(id)
 ## clean stn name for inclusion in file save name
@@ -38,9 +39,8 @@ stn_clean <- str_replace_all(stn_clean,"'","")
 ## YEAR
 ## year for data -> date is set to 12-31 of selected yr; will collect whatever is available
 ## if current yr (or any single yr) set start and end to current yr
-yr_start <- 2013
-yr_end <- 2020
-
+yr_start <- 1970
+yr_end <- 1983
 
 ## DATA COLLECTION LOOP #### 
 ## empty data frame to hold data from each loop cycle
@@ -157,6 +157,9 @@ vw.new.sel <- left_join(seasons.mth, vw.new.sel, by='Month')
 vw.new.sel <- vw.new.sel %>% mutate(
   Season.Yr=ifelse(Month==12,Year+1,Year))
 
+## add stn name
+vw.new.sel$station <- stn
+
 ## SAVE yr_data from loop ####
 write_csv(vw.new.sel, paste0("output/",stn_clean,"-weather-",yr_data,".csv"))
 
@@ -172,6 +175,10 @@ yr_data <- yr_data+1
 } ## END DATA COLLECTION LOOP ####
 ## /////////////////////////////////////////////////
 
+## check dates
+summary(vw_all_yrs$Date)
+#vw_all_yrs <- vw_all_yrs %>% filter(Date>'2013-06-12')
+
 ## SAVE all yrs data
 write_csv(vw_all_yrs, paste0("output/",stn_clean,"-weather-",min(vw_all_yrs$Year),"-",max(vw_all_yrs$Year),".csv"))
 
@@ -184,86 +191,28 @@ if(!file.exists(paste0("output/",stn_clean,"-weather.csv"))){
 } else {
   ## Load existing data ####
   vw.exist <- read_csv(paste0("output/",stn_clean,"-weather.csv"))
-  ## compare max date existing with max date new
+  ## compare MAX date existing with MAX date new
   vw_latest <- vw_all_yrs %>% filter(Date>max(vw.exist$Date))
   ## ADD Latest to existing ####
   vw.all <- bind_rows(vw.exist, vw_latest)
+  ## compare MIN data existing with MIN date new
+  vw_earliest <- vw_all_yrs %>% filter(Date<min(vw.exist$Date))
+  ## ADD earliest BEFORE existing
+  vw.all <- bind_rows(vw_earliest, vw.exist)
 }
 
 ## check dates
 summary(vw.all$Date)
 
+
 ## test for duplicated dates
 table(duplicated(vw.all$Date))
 
-## huge bar chart of number of observations by month and by year
-# ggplot(vw.all, aes(x=Month))+
-#   geom_bar()+
-#   facet_grid(Year~.)
-
 ## SAVE ####
-write_csv(vw.all, paste0("input/",stn_clean,"-weather.csv"))
-write_csv(vw.all, paste0("input/",stn_clean,max(vw.all$Date),"-weather.csv"))
+write_csv(vw.all, paste0("output/",stn_clean,"-weather.csv"))
+write_csv(vw.all, paste0("output/",stn_clean,max(vw.all$Date),"-weather.csv"))
+## save simple without station name in title
+write_csv(vw.all, "output/van-weather.csv")
+write_csv(vw.all, paste0("output/van-weather_",max(vw.all$Date),".csv"))
 
 ## END UPDATE ###################################
-
-## MULTI-YEAR ####
-###\\\\\\\\\\\\\\\\\\\\ NOT NEEDED FOR REGULAR USE
-## X LOOP FOR MULTIPLE YEARS OF HISTORICAL DATA ####
-# yr_start <- 1988
-# yr_end <- 1998
-# 
-# vw.all <- data.frame()
-# yr_data <- yr_start
-# 
-# for(y in 1:(yr_end-yr_start)){
-# #fname <- paste0("~/../Google Drive/Data/van-hrbr-weather-eng-daily-0101",yr_data,"-1231",yr_data,".csv")
-#   data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=888&Year=",yr_data,"&Month=12&Day=1&timeframe=2&submit=Download+Data")
-#   ## destination to save file
-#   file_save_url <- paste0("~/../Google Drive/Data/van-hrbr-weather-eng-daily-0101",yr_data,"-1231",yr_data,".csv")
-#   ## download and save file
-#   download.file(url=data_url, destfile = file_save_url)
-#   
-# if(yr_data>2017){ ## starting in 2018, heading info in csv file has extra row
-# vw <- read_csv(file_save_url, skip=25)
-# } else {
-#   vw <- read.csv(file_save_url, skip=24, header = TRUE)
-# }
-# vw.all <- rbind(vw.all, vw)
-# yr_data <- yr_data+1
-# }
-# table(vw.all$Year)
-# 
-# ## SELECT columns of interest ####
-# vw.all.sel <- vw.all[,c(1,2,3,4,6,8,10,20)]
-# ## CLEAN up col names ####
-# colnames(vw.all.sel)[c(1,5,6,7,8)] <- c('Date','Max.Temp', 'Min.Temp', 'Mean.Temp', 'Total.Precip')
-# ## Set Date format
-# vw.all.sel$Date <- as.Date(vw.all.sel$Date)
-# ## drop empty rows at end
-# vw.all.sel.last <- vw.all.sel %>% filter(!is.na(Max.Temp), !is.na(Min.Temp), !is.na(Mean.Temp)) %>%
-#   filter(Date==max(Date))
-# vw.all.sel <- vw.all.sel %>% filter(Date<=vw.all.sel.last[[1]])
-# ## apply season values
-# seasons.mth <- read_csv('input/seasons.csv')
-# vw.all.sel <- left_join(seasons.mth, vw.all.sel, by='Month')
-# ## set season yr: Dec falls into Winter of following yr
-# vw.all.sel <- vw.all.sel %>% mutate(
-#   Season.Yr=ifelse(Month==12,Year+1,Year))
-# 
-# ## Import existing data
-# vw.exist <- read_csv("input/van-hrbr-weather.csv")
-# 
-# ## BIND to existing ####
-# vw.all.exist <- bind_rows(vw.all.sel, vw.exist)
-# 
-# # ## specify data frame to keep things clean
-# vw1 <- data.frame(vw.all.exist)
-
-## check data
-#summary(vw1)
-#ggplot(vw1, aes(x=Date, y=Mean.Temp))+geom_line()
-
-# # ## save results
-#write.csv(vw1, "input/van-hrbr-weather.csv", row.names = FALSE)
-
