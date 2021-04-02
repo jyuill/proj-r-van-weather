@@ -4,10 +4,12 @@
 ## check summary on Date (code below) to ensure most recent data obtained
 
 library(tidyverse)
+library(lubridate)
 library(googledrive)
 #library(httr)
 
-### FULL MANUAL VERSION - skip to SHORTCUT section below for DIRECT DOWNLOAD ####
+### FULL MANUAL VERSION - skip to MANUAL SHORTCUT section below for DIRECT DOWNLOAD ####
+### Skip to START AUTOMATED DATA COLLECTION for auto process, no manual download needed
 ## weather data from: (skip 4a below to go straight to Van harbour download page)
 ## 1. search: http://climate.weather.gc.ca/historical_data/search_historic_data_e.html
 ## 2. specify desired station:
@@ -17,6 +19,7 @@ library(googledrive)
 ###   - info in 'input/1-van-weather-stations.csv'
 ## 3. select 'daily', select 'year'
 ## 4. 'Go' goes to a page to access results for year
+### MANUAL SHORTCUT
 ## 4a. SHORTCUT TO VANCOUVER HARBOUR FOR GIVEN YEAR
 #yr <- 2018
 #paste0("http://climate.weather.gc.ca/climate_data/daily_data_e.html?hlyRange=1976-01-20%7C2018-12-27&dlyRange=1925-11-01%7C2018-12-27&mlyRange=1925-01-01%7C2007-02-01&StationID=888&Prov=BC&urlExtension=_e.html&searchType=stnName&optLimit=yearRange&StartYear=1840&EndYear=2018&selRowPerPage=25&Line=0&searchMethod=contains&Month=12&Day=27&txtStationName=vancouver+harbour&timeframe=2&Year=",yr)
@@ -24,9 +27,9 @@ library(googledrive)
 ## 5. Download as csv
 ## 6. Save with 'van-hrbr-weather-' prepended (in GDrive > Data)
 
-## START DATA COLLECTION /////////////////////////////////////////////////////
+## START AUTOMATED DATA COLLECTION /////////////////////////////////////////////////////
 ## SET PARAMETERS ####
-## STATION 
+## STATION ####
 ## need station id; get from saved file
 stn_info <- read_csv('input/1-van-weather-stations.csv')
 stn <- "VANCOUVER INTL A" ## main current station
@@ -80,14 +83,15 @@ head(vw.new)
 
 ## CHECK NA ####
 ## check NAs for key cols ()
-any(is.na(vw.new)[,c(5,10,12,14,20,24)])
-if(any(is.na(vw.new)[,c(5,10,12,14,20,24)])){
+vw.new.check <- vw.new %>% filter(`Date/Time`<Sys.Date())
+any(is.na(vw.new.check)[,c(5,10,12,14,20,24)])
+if(any(is.na(vw.new.check)[,c(5,10,12,14,20,24)])){
   print("missing max temp")
-  print(vw.new[which(is.na(vw.new[10])),c(5,10,12,14,20,24)])
+  print(vw.new.check[which(is.na(vw.new.check[10])),c(5,10,12,14,20,24)])
   print("missing min temp")
-  print(vw.new[which(is.na(vw.new[12])),c(5,10,12,14,20,24)])
+  print(vw.new.check[which(is.na(vw.new.check[12])),c(5,10,12,14,20,24)])
   print("missing total precip")
-  print(vw.new[which(is.na(vw.new[24])),c(5,10,12,14,20,24)])
+  print(vw.new.check[which(is.na(vw.new.check[24])),c(5,10,12,14,20,24)])
 } else {
   print("no key data missing")
 }
@@ -100,16 +104,15 @@ colnames(vw.new2)[10] <- "maxtemp"
 colnames(vw.new2)[12] <- 'mintemp'
 colnames(vw.new2)[14] <- 'meantemp'
 
-## full current year: maxtemp
-ggplot(vw.new2, aes_string(x="date", y="maxtemp"))+geom_bar(stat='identity')
-## full yr: precip
-ggplot(vw.new2, aes(x=date, y=`Total Precip (mm)`))+geom_bar(stat='identity')
+## full current year to date: maxtemp
+vw.new2 %>% filter(date<=Sys.Date()) %>% ggplot(aes(x=date, y=maxtemp))+geom_col()
+## full yr to date: precip
+vw.new2 %>% filter(date<=Sys.Date()) %>% ggplot(aes(x=date, y=`Total Precip (mm)`))+geom_col()
 
 ## most recent week
-vw.latest.wk <- vw.new2 %>% filter(date>Sys.Date()-8 & date<Sys.Date())
-vw.latest.wk <- tail(vw.new2, n=7)
+vw.latest.wk <- vw.new2 %>% filter(date>Sys.Date()-15 & date<Sys.Date())
 ## bar chart max temp
-ggplot(vw.latest.wk, aes_string(x="date", y="maxtemp"))+
+ggplot(vw.latest.wk, aes(x=date, y=maxtemp))+
   geom_bar(stat='identity')+
   scale_y_continuous(expand=c(0,0))+
   scale_x_date(date_breaks='1 day')+
@@ -130,7 +133,7 @@ ggplot(vw.latest.wk, aes(x=date, y=mintemp, color='min'))+geom_line()+
   geom_line(aes(y=maxtemp, color='max'))+
   scale_x_date(date_breaks='1 day')+
   theme_classic()+
-  theme(axis.text.x = element_text(angle=25, vjust=1, hjust=1))
+  theme(axis.text.x = element_text(angle=35, vjust=1, hjust=1))
 ## SELECT columns of interest ####
 #vw.new.sel <- vw.new[,c(1,2,3,4,6,8,10,20)]
 vw.new.sel <- vw.new2 %>% select(date, Year, Month, Day,
@@ -172,7 +175,7 @@ cat(paste0("Collected: ", yr_data,"\n"))
 ## add to yr var for next yr 
 yr_data <- yr_data+1
 
-} ## END DATA COLLECTION LOOP ####
+} ## LOOP END DATA COLLECTION ####
 ## /////////////////////////////////////////////////
 
 ## check dates
