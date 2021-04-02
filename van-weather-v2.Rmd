@@ -43,7 +43,7 @@ Data is collected from Govt of Canada website:
 ```{r IMPORT DATA}
 ## get latest data using van-weather-import.R
 ## import saved data
-vw_data <- read_csv("output/van-weather.csv")
+vw_data <- read_csv("output/van-weather.csv") 
 
 ## convert Year, Month to factors for better charting
 vw_data$Year <- as.factor(vw_data$Year)
