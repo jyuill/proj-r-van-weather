@@ -7,39 +7,80 @@ library(tidyverse)
 library(lubridate)
 library(googledrive)
 
-## START DATA COLLECTION /////////////////////////////////////////////////////
-## SET PARAMETERS ####
-## STATION ####
-## need station id; get from saved file
-stn_info <- read_csv('input/1-van-weather-stations.csv')
-stn <- "VANCOUVER INTL A" ## main current station
-#stn <- "VANCOUVER INT'L A" ## for pre-2013 data
-## get stn id from name
-stn_id <- stn_info %>% filter(name==stn) %>% select(id)
-## clean stn name for inclusion in file save name
-stn_clean <- str_replace_all(stn," ","_")
-stn_clean <- str_replace_all(stn_clean,"'","")
-## YEAR
-## year for data -> date is set to 12-31 of selected yr; will collect whatever is available
-## set start and end to current yr
-yr_start <- year(Sys.Date())
-yr_end <- year(Sys.Date())
+## SETUP FUNCTIONS ####
+
+## fetch station data based on station name and year, save, return
+fStn_data <- function(stn, yr_data){
+  ## get stn info
+  stn_info <- read_csv('input/1-van-weather-stations.csv')
+  ## get stn id from name
+  stn_id <- stn_info %>% filter(name==stn) %>% select(id)
+  ## clean stn name for inclusion in file save name
+  stn_clean <- str_replace_all(stn," ","_")
+  stn_clean <- str_replace_all(stn_clean,"'","")
+  ## year for data -> get data for entire yr specified (will include dates in future to end of yr)
+  data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=",
+                     stn_id[[1]],
+                     "&Year=",
+                     yr_data,"&Month=12&Day=31&timeframe=2&submit=Download+Data")
+  ## DOWNLOAD and SAVE data file 
+  ## 1. specify save location/name 
+  file_save_url <- paste0("input/",
+                          stn_clean,"_weather-eng-daily-0101",yr_data,"-1231",yr_data,".csv")
+  ## 2. download/save
+  download.file(url=data_url, destfile = file_save_url)
+  
+  ## 3. import file back into R - skip heading rows
+  vw.new_stn <- read_csv(file_save_url)
+  vw.new_stn$Month <- as.numeric(vw.new_stn$Month)
+  vw.new_stn$Day <- as.numeric(vw.new_stn$Day)
+  vw.new_stn$Stn <- stn
+  return(vw.new_stn)
+}
+
+
+
+## clean up station data
+fVw_stn_clean <- function(vw.new_stn){
+  ## first RENAME - using col references because awkward naming/symbols
+  vw.new2 <- vw.new_stn %>%
+    rename(Date=`Date/Time`)
+  colnames(vw.new2)[10] <- "Max.Temp"
+  colnames(vw.new2)[12] <- "Min.Temp"
+  colnames(vw.new2)[14] <- "Mean.Temp"
+  colnames(vw.new2)[24] <- "Total.Precip"
+  ## SELECT
+  vw.new.sel <- vw.new2 %>% select(Stn, Date, Year, Month, Day,
+                                   Max.Temp, Min.Temp, Mean.Temp,
+                                   Total.Precip)
+  ## drop empty rows after most recent date
+  vw.new.sel.backup <- vw.new.sel
+  vw.new.sel <- vw.new.sel %>% filter(Date<=Sys.Date()-1)
+  ## return
+  return(vw.new.sel)
+}
+
+## START DATA COLLECTION ####
+
+## Get data for selected station - using function above
+stn <- 'VANCOUVER HARBOUR CS'
 yr_data <- year(Sys.Date())
+## run data function
+vw.new_stn <- fStn_data(stn, yr_data)
+## run cleaning function
+vw.new_stn_clean <- fVw_stn_clean(vw.new_stn)
 
-## 1. Generate URL that identifies station id and date range:
-## data url for fetching
-data_url <- paste0("http://climate.weather.gc.ca/climate_data/bulk_data_e.html?format=csv&stationID=",
-stn_id[[1]],
-"&Year=",
-yr_data,"&Month=12&Day=31&timeframe=2&submit=Download+Data")
+## NAs ####
+## if there are NA check for other station
+## check NAs for key cols ()
+any(is.na(vw.new_stn_clean)[,c('Max.Temp', 'Min.Temp', 'Mean.Temp', 'Total.Precip')])
+if(any(is.na(vw.new_stn_clean)[,c('Max.Temp', 'Min.Temp', 'Mean.Temp', 'Total.Precip')])){
+  vw.new_stn_clean[!complete.cases(vw.new_stn_clean),]
+} else {
+  print("no key data missing")
+}
 
-## destination to SAVE file
-## save URL
-file_save_url <- paste0("input/",
-                       stn_clean,"weather-eng-daily-0101",yr_data,"-1231",yr_data,".csv")
-## DOWNLOAD and SAVE data file ####
-download.file(url=data_url, destfile = file_save_url)
-
+## old ////// ####
 ## import file back into R - skip heading rows
 vw.new <- read_csv(file_save_url)
 vw.new$Month <- as.numeric(vw.new$Month)
@@ -57,11 +98,12 @@ colnames(vw.new2)[24] <- "Total.Precip"
 vw.new.sel <- vw.new2 %>% select(Date, Year, Month, Day,
                                  Max.Temp, Min.Temp, Mean.Temp,
                                  Total.Precip)
-## drop empty rows at end <- probably better way to determine this
-## get latest date where key fields are not all NA
-vw.new.sel.last <- vw.new.sel %>% filter(!is.na(Max.Temp), !is.na(Min.Temp), !is.na(Mean.Temp), !is.na(Total.Precip)) %>%
-  filter(Date==max(Date))
-vw.new.sel <- vw.new.sel %>% filter(Date<=vw.new.sel.last[[1]])
+## drop empty rows after most recent date
+vw.new.sel.backup <- vw.new.sel
+vw.new.sel <- vw.new.sel %>% filter(Date<=Sys.Date())
+
+
+
 ## apply season values
 seasons.mth <- read_csv('input/seasons.csv')
 vw.new.sel <- left_join(seasons.mth, vw.new.sel, by='Month')
