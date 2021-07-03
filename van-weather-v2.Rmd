@@ -60,11 +60,11 @@ levels(vw_data$Season)
 `
 ```{r, fig.height=1.5, fig.width=7}
 ## stations
-vw_stn <- vw_data %>% select(station, Year) %>% mutate(
+vw_stn <- vw_data %>% select(Station, Year) %>% mutate(
   Year=as.numeric(levels(vw_data$Year))[Year]
 ) 
 
-vw_stn %>% ggplot(aes(x=station, y=Year))+geom_point()+
+vw_stn %>% ggplot(aes(x=Station, y=Year))+geom_point()+
   coord_flip()+theme_classic()+
   labs(title='Weather Stations',x='')
 
@@ -365,9 +365,11 @@ vw_na %>% group_by(Year) %>% summarize(NAs=n()) %>% filter(NAs>1) %>% ggplot(aes
 
 ```{r ANNUAL TEMP}
 ## get ave of mean, min, max daily temp by year
-## first remove data from current yr if less than 1/2 way through yr
-if(month(max(vw_data$Date))<7){
+## first remove data from current yr if less than at least 9 mths datain yr
+if(month(max(vw_data$Date))<10){
   vw.temp.yr <- vw_data %>% filter(as.numeric(as.character(Year))<max(as.numeric(as.character(vw_data$Year))))
+} else {
+  vw.temp.yr <- vw_data
 }
 ## group by yr to get mean temps
 vw.temp.yr <- vw.temp.yr %>% group_by(Year) %>% summarize(mean.mean=mean(Mean.Temp, na.rm=TRUE),                                 mean.min=mean(Min.Temp, na.rm=TRUE), 
