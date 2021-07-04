@@ -12,6 +12,7 @@ output:
 ---
 
 ```{r SETUP, include=FALSE}
+## NAVBAR note: will be automatically included on knit using _navbar.html file
 knitr::opts_chunk$set(echo=TRUE, 
                       warning=FALSE, 
                       message=FALSE,
