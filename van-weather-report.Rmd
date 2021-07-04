@@ -4,11 +4,13 @@ author: "John Yuill"
 date: "`r Sys.Date()`"
 output:
   html_document:
+    theme: spacelab
     code_folding: hide
     df_print: paged
     includes:
       in_header: gtm-head-jyuill-github-io.html
       before_body: gtm-body-jyuill-github-io.html
+  
 ---
 
 ```{r SETUP, include=FALSE}
@@ -19,13 +21,13 @@ knitr::opts_chunk$set(echo=TRUE,
                       fig.height=3,
                       fig.width=4)
 
-library(prettydoc)
 library(tidyverse)
 library(scales)
 library(PerformanceAnalytics)
 library(lubridate)
 library(plotly)
 library(gridExtra)
+library(glue) ## using as alt to paste0 - not actually sure of advantage
 
 ## chart settings
 theme_set(theme_classic())
@@ -650,17 +652,88 @@ Charts coming soon! Or at least eventually. ;)
 
 ## Records
 
-```{r}
+What are the wettest days on record?
+
+```{r, fig.height=2, fig.width=6}
+## chart by date - alternative consideration
+# vw_data %>% slice_max(order_by=Total.Precip, n=5) %>% select(Date, Max.Temp, Min.Temp, Total.Precip) %>% ggplot(aes(x=Date, y=Total.Precip))+geom_col()+
+#   scale_y_continuous(expand=expansion(mult=c(0,0.05)))
+
+nrec <- 5
+chart.title <- glue("Top ",nrec," Days by Total Precipitation")
+vw_data %>% slice_max(order_by=Total.Precip, n=nrec) %>% select(Date, Total.Precip) %>%
+  ggplot(aes(x=reorder(as.character(Date), Total.Precip), 
+             y=Total.Precip, label=Total.Precip))+geom_col()+
+  geom_text(hjust=0, size=4, nudge_y=0.5)+
+  coord_flip()+
+  scale_y_continuous(expand=expansion(mult=c(0,0.1)))+
+  labs(title=chart.title, x="", y="Single Day Precipitation (cm)")
 
 ```
 
-
-What are the wettest days on record?
 What are the wettest months on record?
+
+```{r, fig.height=2, fig.width=6}
+nrec <- 5
+chart.title <- glue("Top ",nrec," Months by Total Precipitation")
+
+## ungroup needed for slice_max to work
+vw.precip.mth.yr %>% ungroup() %>% mutate(
+  Year_Mth=paste0(as.character(Year),"-",as.character(Month)) 
+) %>% select(Year_Mth, ttl_precip) %>% 
+  slice_max(order_by=ttl_precip, n=nrec) %>% 
+  ggplot(aes(x=reorder(Year_Mth, ttl_precip), 
+             y=ttl_precip, label=ttl_precip))+geom_col()+
+  geom_text(hjust=0, size=4, nudge_y=0.5)+
+  coord_flip()+
+  scale_y_continuous(expand=expansion(mult=c(0,0.1)))+
+  labs(title=chart.title, x="", y="Single Day Precipitation (cm)")
+
+```
 
 What are the coldest days on record?
 
+```{r, fig.height=2, fig.width=6}
+nrec <- 5
+## set metric to be used for filtering and other manipulation
+## applied by referring to: 
+##  get(metric) - simpler, more intuitive but doesn't always seem to work
+##  !!sym(metric) - ugly, complicated, works
+metric <- 'Min.Temp'
+
+chart.title <- glue("Coldest ",nrec," Days by Temperature")
+vw_data %>% slice_min(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric)) %>%
+  ggplot(aes(x=reorder(as.character(Date), -get(metric)), 
+             y=get(metric), label=get(metric)))+geom_col()+
+  geom_text(hjust=0, size=4, nudge_y=0.5)+
+  coord_flip()+
+  scale_y_reverse(expand=expansion(mult=c(0,0.1)))+ ## reversing axis order for readability
+  labs(title=chart.title, x="", y="Min. Temp (c)")
+```
+
 What are the hottest days on record?
+
+```{r, fig.height=2, fig.width=6}
+nrec <- 5
+## set metric to be used for filtering and other manipulation
+## applied by referring to: 
+##  get(metric) - simpler, more intuitive but doesn't always seem to work
+##  !!sym(metric) - ugly, complicated, works
+metric <- 'Max.Temp'
+chart.title <- glue("Hottest ",nrec," Days by Temperature")
+metric <- 'Max.Temp'
+
+chart.title <- glue("Coldest ",nrec," Days by Temperature")
+vw_data %>% slice_max(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric)) %>%
+  ggplot(aes(x=reorder(as.character(Date), get(metric)), 
+             y=get(metric), label=get(metric)))+geom_col()+
+  geom_text(hjust=0, size=4, nudge_y=0.5)+
+  coord_flip()+
+  scale_y_continuous(expand=expansion(mult=c(0,0.1)))+ ## reversing axis order for readability
+  labs(title=chart.title, x="", y=paste0(metric," (c)"))
+
+```
+
 
 ## Sources
 
