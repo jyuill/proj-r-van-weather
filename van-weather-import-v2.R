@@ -81,47 +81,83 @@ fVw_stn_clean <- function(vw.new_stn, maxD){
 }
 
 ## START DATA COLLECTION ####
+## > Get existing ####
 ## Get existing data to determine what date to start from
 van_exist <- read_csv('output/van-weather.csv')
 van_exist_maxD <- max(van_exist$Date)
 
+## > Set station ####
 ## Get data for selected station - using function above
 stn <- 'VANCOUVER INTL A' ## currently mostly reliable station
 stn_alt <- 'VANCOUVER HARBOUR CS' ## 2nd most reliable - can be used if precip data missing
 yr_data <- year(Sys.Date())
-## run data function
+## > Run data fn ####
 vw.new_stn <- fStn_data(stn, yr_data)
-## run cleaning function
+## > Run cleaning fn ####
 vw.new_stn_clean <- fVw_stn_clean(vw.new_stn, van_exist_maxD)
 
 ## NAs ####
 ## if there are NA check for other station
 ## check NAs for precip cols - focus on precip because missing data affects total; 
 ## - missing temperature data not as significant (probably not significantly affect averages)
-any(is.na(vw.new_stn_clean)[,c('Total.Precip')])
-## if you want to see all incomplete cases
+#any(is.na(vw.new_stn_clean)[,c('Total.Precip')])
+## see all incomplete cases
 #vw.new_stn_clean[!complete.cases(vw.new_stn_clean),]
-## SUB IN MISSING PRECIP ####
-if(any(is.na(vw.new_stn_clean)[,c('Total.Precip')])){
-  vw.new_stn_clean[is.na(vw.new_stn_clean$Total.Precip),]
+## SUB IN MISSING PRECIP - original
+#if(any(is.na(vw.new_stn_clean)[,c('Total.Precip')])){
+## SUB IN MISSING TEMP & PRECIP ####
+if(any(!complete.cases(vw.new_stn_clean))){
+  #vw.new_stn_clean[is.na(vw.new_stn_clean$Total.Precip),]
   ## get alternate data to hopefully fill-in precip as approx
   vw.new_stn_alt <- fStn_data(stn_alt, yr_data)
   vw.new_stn_alt_clean <- fVw_stn_clean(vw.new_stn_alt, van_exist_maxD)
   ## substitute missing precip data from other station
-  ## create loop based on rows with missing precip data
-  na_rows <- which(is.na(vw.new_stn_clean$Total.Precip))
+  ## create loop based on:
+  ## - rows with missing precip data
+  #na_rows <- which(is.na(vw.new_stn_clean$Total.Precip))
+  ## - based on any missing values
+  na_rows <- which(!complete.cases(vw.new_stn_clean))
   for(r in 1:length(na_rows)){
+    vw.new_stn_fill <- vw.new_stn_clean[na_rows[r],]
     r_date <- vw.new_stn_clean$Date[na_rows[r]]
-    r_sub <- vw.new_stn_alt_clean %>% filter(Date==r_date) %>% select(Total.Precip, Station)
-    vw.new_stn_clean$Total.Precip[na_rows[r]] <- r_sub[[1]]
-    vw.new_stn_clean$Station[na_rows[r]] <- r_sub[[2]]
+    r_sub <- vw.new_stn_alt_clean %>% filter(Date==r_date) 
+    ## go through each metric and replace if missing
+    ## precip
+    vw.new_stn_clean$Total.Precip[na_rows[r]] <- ifelse(
+      is.na(vw.new_stn_clean$Total.Precip[na_rows[r]]), r_sub$Total.Precip,
+      vw.new_stn_clean$Total.Precip[na_rows[r]])
+    ## max temp
+    #vw.new_stn_clean$Max.Temp[na_rows[r]] <- r_sub[[2]]
+    vw.new_stn_clean$Max.Temp[na_rows[r]] <- ifelse(
+      is.na(vw.new_stn_clean$Max.Temp[na_rows[r]]), r_sub$Max.Temp,
+      vw.new_stn_clean$Max.Temp[na_rows[r]])
+    ## min temp
+    #vw.new_stn_clean$Min.Temp[na_rows[r]] <- r_sub[[3]]
+    vw.new_stn_clean$Min.Temp[na_rows[r]] <- ifelse(
+      is.na(vw.new_stn_clean$Min.Temp[na_rows[r]]), r_sub$Min.Temp,
+      vw.new_stn_clean$Min.Temp[na_rows[r]])
+    ## mean temp
+    #vw.new_stn_clean$Mean.Temp[na_rows[r]] <- r_sub[[4]]
+    vw.new_stn_clean$Mean.Temp[na_rows[r]] <- ifelse(
+      is.na(vw.new_stn_clean$Mean.Temp[na_rows[r]]), r_sub$Mean.Temp,
+      vw.new_stn_clean$Mean.Temp[na_rows[r]])
+    ## station - how to attribute data when potentially mixed?
+    vw.new_stn_filled <- vw.new_stn_clean[na_rows[r],]
+    ## if there's data now where used to be NA -> should acknowledge alt station
+    ## if: any NAs in pre-filled match non-NA in filled, then new data
+    ##     identify alt station with '*' indicating some/all data from that station
+    if(any(is.na(vw.new_stn_fill[,7:10])==!is.na(vw.new_stn_filled[,7:10]))){
+      vw.new_stn_clean$Station[na_rows[r]] <- paste0(r_sub$Station,"*")
+    } ## end station
   }
 } else {
-  print("no precipitation data missing")
+  print("no temp or precipitation data missing")
 }
 
 ## APPEND NEW to OLD ####
 vw_all <- bind_rows(van_exist, vw.new_stn_clean)
+## > NA: recent rows ####
+vw_all %>% filter((is.na(Max.Temp)|is.na(Min.Temp)|is.na(Mean.Temp)) & Year>=2017)
 ## SAVE ####
 write_csv(vw_all, 'output/van-weather.csv')
 write_csv(vw_all, paste0('output/van-weather_',max(vw_all$Date),'.csv'))

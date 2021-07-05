@@ -42,7 +42,7 @@ Vancouver weather is all about the **rain**. Temperature is an afterthought. Win
 
 This is an exploration by someone who works with data but makes no claim to being a meteorologist or climatologist. All data here is taken directly from [Government of Canada website for historical weather data](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html). 
 
-There are gaps and mixture of different weather stations for continuity. This is not an official or academic analysis. It is offered for general information - your results may vary!
+There are **gaps** and mixture of **different weather stations** for continuity. This is **not an official or academic analysis**. It is offered for general information - your results may vary!
 
 *Note: this is also a learning exercise in working with* [R statistical software](https://www.r-project.org/) *which is why there are buttons to reveal code for those interested.* [#rstats](https://twitter.com/hashtag/rstats)
 
@@ -445,7 +445,6 @@ ggplot(vw.temp.yr, aes(x=reorder(Year, -mean.mean), y=mean.mean))+
   
 ```
 
-
 #### Linear model of annual temperature change
 
 ```{r ANNUAL TEMP MODEL}
@@ -468,6 +467,7 @@ Model interpretation: <br />
 * Average daily temperature changing `r slope` degrees each yr.
 * P-value for statistical significance: `r pval`
 * Temperature change is *`r statsig`* over this period
+* **NOT a professional climatologist model** - may be issues with data or modeling process
 
 #### Look at Average Daily Maximum and Minimums for each Year
 
@@ -501,6 +501,7 @@ Model interpretation: <br />
 * Average daily MAX temperature changing `r slope` degrees each yr.
 * P-value for statistical significance: `r pval`
 * Temperature change is *`r statsig`* over this period
+* **NOT a professional climatologist model** - may be issues with data or modeling process
 
 ```{r MIN TEMP MODEL}
 at.model <- lm(mean.min~ynum, vw.temp.yr)
@@ -648,9 +649,9 @@ Charts coming soon! Or at least eventually. ;)
 
 *Note: the year for a winter season is applied to year at end of season. So winter from Dec 2018 to Feb 2019 is considered winter of 2019.*
 
-
-
 ## Records
+
+### Precipitation
 
 What are the wettest days on record?
 
@@ -661,9 +662,9 @@ What are the wettest days on record?
 
 nrec <- 5
 chart.title <- glue("Top ",nrec," Days by Total Precipitation")
-vw_data %>% slice_max(order_by=Total.Precip, n=nrec) %>% select(Date, Total.Precip) %>%
+vw_data %>% slice_max(order_by=Total.Precip, n=nrec) %>% select(Date, Total.Precip, Station) %>%
   ggplot(aes(x=reorder(as.character(Date), Total.Precip), 
-             y=Total.Precip, label=Total.Precip))+geom_col()+
+             y=Total.Precip, label=Total.Precip, fill=Station))+geom_col()+
   geom_text(hjust=0, size=4, nudge_y=0.5)+
   coord_flip()+
   scale_y_continuous(expand=expansion(mult=c(0,0.1)))+
@@ -691,25 +692,7 @@ vw.precip.mth.yr %>% ungroup() %>% mutate(
 
 ```
 
-What are the coldest days on record?
-
-```{r, fig.height=2, fig.width=6}
-nrec <- 5
-## set metric to be used for filtering and other manipulation
-## applied by referring to: 
-##  get(metric) - simpler, more intuitive but doesn't always seem to work
-##  !!sym(metric) - ugly, complicated, works
-metric <- 'Min.Temp'
-
-chart.title <- glue("Coldest ",nrec," Days by Temperature")
-vw_data %>% slice_min(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric)) %>%
-  ggplot(aes(x=reorder(as.character(Date), -get(metric)), 
-             y=get(metric), label=get(metric)))+geom_col()+
-  geom_text(hjust=0, size=4, nudge_y=0.5)+
-  coord_flip()+
-  scale_y_reverse(expand=expansion(mult=c(0,0.1)))+ ## reversing axis order for readability
-  labs(title=chart.title, x="", y="Min. Temp (c)")
-```
+### Temperature
 
 What are the hottest days on record?
 
@@ -723,17 +706,34 @@ metric <- 'Max.Temp'
 chart.title <- glue("Hottest ",nrec," Days by Temperature")
 metric <- 'Max.Temp'
 
-chart.title <- glue("Coldest ",nrec," Days by Temperature")
-vw_data %>% slice_max(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric)) %>%
+vw_data %>% slice_max(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric), Station) %>%
   ggplot(aes(x=reorder(as.character(Date), get(metric)), 
-             y=get(metric), label=get(metric)))+geom_col()+
+             y=get(metric), label=get(metric), fill=Station))+geom_col()+
   geom_text(hjust=0, size=4, nudge_y=0.5)+
   coord_flip()+
   scale_y_continuous(expand=expansion(mult=c(0,0.1)))+ ## reversing axis order for readability
   labs(title=chart.title, x="", y=paste0(metric," (c)"))
-
 ```
 
+What are the coldest days on record?
+
+```{r, fig.height=2, fig.width=6}
+nrec <- 5
+## set metric to be used for filtering and other manipulation
+## applied by referring to: 
+##  get(metric) - simpler, more intuitive but doesn't always seem to work
+##  !!sym(metric) - ugly, complicated, works
+metric <- 'Min.Temp'
+
+chart.title <- glue("Coldest ",nrec," Days by Temperature")
+vw_data %>% slice_min(order_by=get(metric), n=nrec) %>% select(Date, !!sym(metric), Station) %>%
+  ggplot(aes(x=reorder(as.character(Date), -get(metric)), 
+             y=get(metric), label=get(metric), fill=Station))+geom_col()+
+  geom_text(hjust=0, size=4, nudge_y=0.5)+
+  coord_flip()+
+  scale_y_reverse(expand=expansion(mult=c(0,0.1)))+ ## reversing axis order for readability
+  labs(title=chart.title, x="", y="Min. Temp (c)")
+```
 
 ## Sources
 
