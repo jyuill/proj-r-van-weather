@@ -1,0 +1,235 @@
+---
+title: "Vancouver Weather"
+author: ""
+date: "`r Sys.Date()`"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    includes:
+      in_header: gtm-head-jyuill-github-io.html
+      before_body: gtm-body-jyuill-github-io.html
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(plotly)
+
+theme_set(theme_light())
+```
+
+```{r}
+## Get data
+## get latest data using van-weather-import.R
+## import saved data
+vw_data <- read_csv("output/van-weather.csv") 
+
+## convert Year, Month to factors for better charting
+vw_data$Year <- as.factor(vw_data$Year)
+vw_data$Month <- as.factor(vw_data$Month)
+vw_data$Season <- as.factor(vw_data$Season)
+## set Season order
+vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fall"))
+#levels(vw_data$Season)
+
+```
+
+```{r}
+## Monthly precipitation for each month, each year
+vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year, Month) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE))
+
+## Group by month
+vw.precip.mth <- vw.precip.mth.yr %>% group_by(Month) %>%
+  summarize(ave_precip=mean(ttl_precip, na.rm=TRUE)) %>%
+  mutate(pc_rank=percent_rank(ave_precip),
+         pc=ave_precip/sum(ave_precip),
+         rank=rank(desc(ave_precip)))
+
+## filter for current year to overlay current year metrics on chart
+vw.precip.mth.curr.yr <- vw.precip.mth.yr %>% filter(Year==year(Sys.Date()))
+## need to have full 12 months for chart (even though some empty)
+## get highest month with data in current year
+fms <- max(as.numeric(vw.precip.mth.curr.yr$Month))+1
+## create data frame for blank months
+vw.precip.yr.future.mth <- data.frame(Year='2019',
+                                      Month=c(fms:12),
+                                       ttl_precip=NA,
+                                      precip_days=NA)
+## convert Month field in current yr from factor to integer for binding
+vw.precip.mth.curr.yr$Month <- as.integer(vw.precip.mth.curr.yr$Month)
+## add blank rows to current yr
+vw.precip.mth.curr.yr <- bind_rows(vw.precip.mth.curr.yr,
+                                    vw.precip.yr.future.mth) 
+```
+
+Current
+===================================================================
+
+Column
+-----------------------------------------------------------------------
+
+### Recent Precipitation
+
+```{r}
+num_days <- 30
+p1 <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days) %>%
+  ggplot(aes(x=Date, y=Total.Precip))+geom_col()+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  labs(x="", y="Total Daily Precipitation")
+
+ggplotly(p1)
+```
+
+### Monthly Precipation (red diamonds = current yr)
+
+```{r}
+## Ave precip by month ####
+# chart.title <- "Average Precipitation by Month"
+# sub.title <- "(red marker is curr. yr.)"
+# p2 <- ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
+#   geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+#   scale_y_continuous(expand=c(0.1,0.1))+
+#   labs(title=chart.title, subtitle=sub.title, x="", y="Ave. Precipitation")
+# ggplotly(p2)
+
+
+## Range in precipitation by month ####
+chart.title <- "Monthly Precip. Ranges during Period"
+sub.title <- "(red markers: current yr.)"
+p2 <- ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+  labs(x="", y="Mthly Precipitation")
+ggplotly(p2)
+
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Recent Temperature
+
+```{r}
+num_days <- 30
+t1 <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days) %>%
+  ggplot(aes(x=Date, y=Max.Temp))+geom_line(color='red')+
+  geom_line(aes(y=Mean.Temp), color='green')+
+  geom_line(aes(y=Min.Temp), color='blue')+
+  #scale_y_continuous(expand=expansion(add=c(0,2)))+
+  scale_x_date(expand=c(0,0))+
+  labs(x="", y="Max Daily Temperature")
+
+ggplotly(t1)
+```
+
+### Monthly Temperature Comp. (red diamonds = current yr)
+
+```{r}
+## Monthly precipitation for each month, each year
+vw.temp.mth.yr <- vw_data %>% 
+  group_by(Year, Month) %>%
+  summarize(ave_temp=mean(Mean.Temp, na.rm=TRUE),
+            ave_max_temp=mean(Max.Temp, na.rm=TRUE),
+            ave_min_temp=mean(Min.Temp, na.rm=TRUE),
+            max_temp=max(Max.Temp, na.rm=TRUE),
+            min_temp=min(Min.Temp, na.rm=TRUE))
+
+#is.nan(vw.temp.mth.yr$ave_max_temp)
+#vw.temp.mth.yr %>% filter(max_temp==-Inf)
+## need to clean up missing values
+## even with na.rm used above, if there are only NA for a given month, 
+##  it will return NaN for mean and Inf or -Inf for min/max
+## clean up
+vw.temp.mth.yr <- vw.temp.mth.yr %>% mutate(
+  ave_temp=ifelse(is.nan(ave_temp),NA,ave_temp),
+  ave_max_temp=ifelse(is.nan(ave_max_temp),NA,ave_max_temp),
+  ave_min_temp=ifelse(is.nan(ave_min_temp),NA,ave_min_temp),
+  max_temp=ifelse(max_temp==-Inf|max_temp==Inf,NA, max_temp),
+  min_temp=ifelse(min_temp==-Inf|min_temp==Inf,NA, min_temp)
+)
+
+## Monthly average temp across years
+vw.temp.mth <- vw.temp.mth.yr %>% group_by(Month) %>%
+  summarize(ave_temp=mean(ave_temp, na.rm=TRUE),
+            ave_max_temp=mean(ave_max_temp, na.rm=TRUE),
+            ave_min_temp=mean(ave_min_temp, na.rm=TRUE)) %>%
+  mutate(pc_rank=percent_rank(ave_temp),
+         rank=rank(desc(ave_temp)))
+
+## filter for current year to overlay current year metrics on chart
+vw.temp.mth.curr.yr <- vw.temp.mth.yr %>% filter(Year==year(Sys.Date()))
+## need to have full 12 months for chart (even though some empty)
+## get highest month with data in current year
+fms <- max(as.numeric(vw.temp.mth.curr.yr$Month))+1
+## create data frame for blank months
+vw.temp.yr.future.mth <- data.frame(Year=year(Sys.Date()),
+                                      Month=c(fms:12))
+## convert Month field in current yr from factor to integer for binding
+vw.temp.mth.curr.yr$Year <- as.integer(vw.temp.mth.curr.yr$Year)
+vw.temp.mth.curr.yr$Month <- as.integer(vw.temp.mth.curr.yr$Month)
+
+## add blank rows to current yr
+vw.temp.mth.curr.yr <- bind_rows(vw.temp.mth.curr.yr,
+                                    vw.temp.yr.future.mth) 
+
+```
+
+```{r}
+## Distribution of temperature by month ####
+
+## Range in temperature by month ####
+chart.title <- "Monthly Temp. Ranges during Period (Red markers: current yr.)"
+t2 <- ggplot(vw.temp.mth.yr, aes(x=Month, y=ave_temp))+geom_boxplot()+
+  geom_point(data=vw.temp.mth.curr.yr, aes(x=Month, y=ave_temp),shape=18, color='red', size=2.5)+
+  labs(x="", y="Ave. Temperature") ## subtitle doesn't work with ggplotly
+ggplotly(t2)
+
+```
+
+
+Source
+===================================================================
+
+Produced by John Yuill <br />
+All source code and data used is available in my Github repo: <br />
+[proj-r-van-weather](https://github.com/jyuill/proj-r-van-weather)
+
+**Govt of Canada Historical Weather data** <br />
+Data is collected from: <br />
+http://climate.weather.gc.ca/historical_data/search_historic_data_e.html
+
+Data is available from the government on a daily basis and updated *occasionally* here. ;) 
+
+Date range currently covered:
+
+**Earliest date:** *`r min(vw_data$Date)`* <br />
+**Most recent date:** *`r max(vw_data$Date)`* <br />
+
+The following weather stations are represented. Not the preferred approach but I couldn't find continuous data for any single weather station.
+
+```{r, fig.height=1.5, fig.width=7}
+## stations
+vw_stn <- vw_data %>% select(Station, Year) %>% mutate(
+  Year=as.numeric(levels(vw_data$Year))[Year]
+) 
+
+vw_stn %>% ggplot(aes(x=Station, y=Year))+geom_point()+
+  coord_flip()+theme_classic()+
+  labs(title='Weather Stations',x='')
+
+```
+
+### Data Structure
+
+Check data structure and summary:
+
+```{r DATA STRUCTURE}
+str(vw_data)
+
+summary(vw_data)
+```

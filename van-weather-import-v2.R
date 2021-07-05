@@ -1,5 +1,6 @@
 ## UPDATE WEATHER DATA FROM SOURCE
 ## climate.weather.gc.ca/historical-data -> details below
+## Process ####
 ## SIMPLIFIED VERSION FOR QUICK UPDATING DURING CURRENT YR - van-weather-import.R has full version
 ## 1. Fetch existing data for date reference and appending later
 ## 2. Fetch new data, clean, filter for recent dates not in existing data
@@ -86,7 +87,7 @@ fVw_stn_clean <- function(vw.new_stn, maxD){
 van_exist <- read_csv('output/van-weather.csv')
 van_exist_maxD <- max(van_exist$Date)
 
-## > Set station ####
+## > Set station & yr ####
 ## Get data for selected station - using function above
 stn <- 'VANCOUVER INTL A' ## currently mostly reliable station
 stn_alt <- 'VANCOUVER HARBOUR CS' ## 2nd most reliable - can be used if precip data missing
@@ -102,12 +103,12 @@ vw.new_stn_clean <- fVw_stn_clean(vw.new_stn, van_exist_maxD)
 ## - missing temperature data not as significant (probably not significantly affect averages)
 #any(is.na(vw.new_stn_clean)[,c('Total.Precip')])
 ## see all incomplete cases
-#vw.new_stn_clean[!complete.cases(vw.new_stn_clean),]
+vw.new_stn_na <- vw.new_stn_clean[!complete.cases(vw.new_stn_clean),]
+
 ## SUB IN MISSING PRECIP - original
 #if(any(is.na(vw.new_stn_clean)[,c('Total.Precip')])){
 ## SUB IN MISSING TEMP & PRECIP ####
 if(any(!complete.cases(vw.new_stn_clean))){
-  #vw.new_stn_clean[is.na(vw.new_stn_clean$Total.Precip),]
   ## get alternate data to hopefully fill-in precip as approx
   vw.new_stn_alt <- fStn_data(stn_alt, yr_data)
   vw.new_stn_alt_clean <- fVw_stn_clean(vw.new_stn_alt, van_exist_maxD)
@@ -153,11 +154,15 @@ if(any(!complete.cases(vw.new_stn_clean))){
 } else {
   print("no temp or precipitation data missing")
 }
+## compare na set to filled set
+vw_fill_dates <- vw.new_stn_na %>% select(Date)
+vw.new_stn_na
+left_join(vw_fill_dates, vw.new_stn_clean, by='Date')
 
 ## APPEND NEW to OLD ####
 vw_all <- bind_rows(van_exist, vw.new_stn_clean)
 ## > NA: recent rows ####
-vw_all %>% filter((is.na(Max.Temp)|is.na(Min.Temp)|is.na(Mean.Temp)) & Year>=2017)
+#vw_all %>% filter((is.na(Max.Temp)|is.na(Min.Temp)|is.na(Mean.Temp)) & Year>=2017)
 ## SAVE ####
 write_csv(vw_all, 'output/van-weather.csv')
 write_csv(vw_all, paste0('output/van-weather_',max(vw_all$Date),'.csv'))
