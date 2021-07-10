@@ -19,6 +19,11 @@ library(scales)
 library(plotly)
 
 theme_set(theme_light())
+
+## color setup
+precip_color <- 'lightsteelblue2' ## 'snow3' ## 'lightsteelblue' ## 'snow3' 'slategray3' ## 'lightsteelblue3'
+warm_color <- 'orangered'
+cool_color <- 'lightskyblue'
 ```
 
 ```{r}
@@ -37,7 +42,7 @@ vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fa
 
 ```
 
-```{r}
+```{r, PRECIPTIATION DATA PROC}
 ## Monthly precipitation for each month, each year
 vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
   group_by(Year, Month) %>%
@@ -66,97 +71,38 @@ vw.precip.mth.curr.yr$Month <- as.integer(vw.precip.mth.curr.yr$Month)
 ## add blank rows to current yr
 vw.precip.mth.curr.yr <- bind_rows(vw.precip.mth.curr.yr,
                                     vw.precip.yr.future.mth) 
-```
 
-Current
-===================================================================
-
-Column
------------------------------------------------------------------------
-
-### Recent Precipitation
-
-```{r}
-num_days <- 30
-p1 <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days) %>%
-  ggplot(aes(x=Date, y=Total.Precip))+geom_col()+
-  scale_y_continuous(expand=expansion(add=c(0,2)))+
-  labs(x="", y="Total Daily Precipitation")
-
-ggplotly(p1)
-```
-
-### Monthly Precipation (red diamonds = current yr)
-
-```{r}
-## Ave precip by month ####
-# chart.title <- "Average Precipitation by Month"
-# sub.title <- "(red marker is curr. yr.)"
-# p2 <- ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
-#   geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
-#   scale_y_continuous(expand=c(0.1,0.1))+
-#   labs(title=chart.title, subtitle=sub.title, x="", y="Ave. Precipitation")
-# ggplotly(p2)
-
-
-## Range in precipitation by month ####
-chart.title <- "Monthly Precip. Ranges during Period"
-sub.title <- "(red markers: current yr.)"
-p2 <- ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot()+
-  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
-  labs(x="", y="Mthly Precipitation")
-ggplotly(p2)
 
 ```
 
-Column
------------------------------------------------------------------------
-
-### Recent Temperature
-
-```{r}
-num_days <- 30
-t1 <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days) %>%
-  ggplot(aes(x=Date, y=Max.Temp))+geom_line(color='red')+
-  geom_line(aes(y=Mean.Temp), color='green')+
-  geom_line(aes(y=Min.Temp), color='blue')+
-  #scale_y_continuous(expand=expansion(add=c(0,2)))+
-  scale_x_date(expand=c(0,0))+
-  labs(x="", y="Max Daily Temperature")
-
-ggplotly(t1)
-```
-
-### Monthly Temperature Comp. (red diamonds = current yr)
-
-```{r}
+```{r, TEMPERATURE DATA PROC}
 ## Monthly precipitation for each month, each year
 vw.temp.mth.yr <- vw_data %>% 
   group_by(Year, Month) %>%
   summarize(ave_temp=mean(Mean.Temp, na.rm=TRUE),
-            ave_max_temp=mean(Max.Temp, na.rm=TRUE),
+            ave_min_temp=mean(Max.Temp, na.rm=TRUE),
             ave_min_temp=mean(Min.Temp, na.rm=TRUE),
-            max_temp=max(Max.Temp, na.rm=TRUE),
+            min_temp=max(Max.Temp, na.rm=TRUE),
             min_temp=min(Min.Temp, na.rm=TRUE))
 
-#is.nan(vw.temp.mth.yr$ave_max_temp)
-#vw.temp.mth.yr %>% filter(max_temp==-Inf)
+#is.nan(vw.temp.mth.yr$ave_min_temp)
+#vw.temp.mth.yr %>% filter(min_temp==-Inf)
 ## need to clean up missing values
 ## even with na.rm used above, if there are only NA for a given month, 
 ##  it will return NaN for mean and Inf or -Inf for min/max
 ## clean up
 vw.temp.mth.yr <- vw.temp.mth.yr %>% mutate(
   ave_temp=ifelse(is.nan(ave_temp),NA,ave_temp),
-  ave_max_temp=ifelse(is.nan(ave_max_temp),NA,ave_max_temp),
   ave_min_temp=ifelse(is.nan(ave_min_temp),NA,ave_min_temp),
-  max_temp=ifelse(max_temp==-Inf|max_temp==Inf,NA, max_temp),
+  ave_min_temp=ifelse(is.nan(ave_min_temp),NA,ave_min_temp),
+  min_temp=ifelse(min_temp==-Inf|min_temp==Inf,NA, min_temp),
   min_temp=ifelse(min_temp==-Inf|min_temp==Inf,NA, min_temp)
 )
 
 ## Monthly average temp across years
 vw.temp.mth <- vw.temp.mth.yr %>% group_by(Month) %>%
   summarize(ave_temp=mean(ave_temp, na.rm=TRUE),
-            ave_max_temp=mean(ave_max_temp, na.rm=TRUE),
+            ave_min_temp=mean(ave_min_temp, na.rm=TRUE),
             ave_min_temp=mean(ave_min_temp, na.rm=TRUE)) %>%
   mutate(pc_rank=percent_rank(ave_temp),
          rank=rank(desc(ave_temp)))
@@ -179,12 +125,197 @@ vw.temp.mth.curr.yr <- bind_rows(vw.temp.mth.curr.yr,
 
 ```
 
+```{r, RECENT}
+## recent data
+num_days <- 30
+vw_data_rec <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days)
+
+```
+
+Current
+===================================================================
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Total Recent Precipitation (cm)
+
+```{r}
+#valueBox(prettyNum(sum(vw_data_rec$Total.Precip, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+```
+
+```{r}
+s1 <- quantile(vw.precip.mth.yr$ttl_precip, 0.75)
+s2 <- max(vw.precip.mth.yr$ttl_precip)
+w1 <- quantile(vw.precip.mth.yr$ttl_precip, 0.25)
+w2 <- quantile(vw.precip.mth.yr$ttl_precip, 0.74)
+d1 <- min(vw.precip.mth.yr$ttl_precip, na.rm=TRUE)
+d2 <- quantile(vw.precip.mth.yr$ttl_precip, 0.24)
+
+gauge(value=sum(vw_data_rec$Total.Precip, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='cm'
+      )
+
+```
+
+
+### Highest Recent Temp. (c)
+
+```{r}
+#valueBox(prettyNum(max(vw_data_rec$Max.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.mth.yr$max_temp, 0.75, na.rm=TRUE)
+smax2 <- max(vw.temp.mth.yr$max_temp, na.rm=TRUE)
+s2 <- max(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+s2 <- mean(vw.temp.mth.yr$max_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.mth.yr$max_temp, 0.25, na.rm=TRUE)
+w2 <- quantile(vw.temp.mth.yr$max_temp, 0.74, na.rm=TRUE)
+dmin1 <- min(vw.temp.mth.yr$max_temp, na.rm=TRUE)
+d1 <- min(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+d1 <- 8
+d2 <- quantile(vw.temp.mth.yr$max_temp, 0.24, na.rm=TRUE)
+
+
+# gauge(value=max(vw_data_rec$Max.Temp, na.rm=TRUE),
+#       min=d1,
+#       max=s2,
+#       sectors=gaugeSectors(
+#         danger=c(s1[[1]],s2),
+#         warning=c(w1[[1]],s1[[1]]),
+#         success=c(d1,w1[[1]])
+#         ),
+#       symbol='c'
+#       )
+
+
+gauge(value=max(vw_data_rec$Max.Temp, na.rm=TRUE),
+      min=d1,
+      max=max(vw.temp.mth.yr$max_temp)+1,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],smax2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(dmin1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Lowest Recent Temp. (c)
+
+```{r}
+#valueBox(prettyNum(min(vw_data_rec$Min.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.mth.yr$min_temp, 0.75)
+s2 <- max(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.mth.yr$min_temp, 0.25)
+w2 <- quantile(vw.temp.mth.yr$min_temp, 0.74)
+d1 <- min(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+d2 <- quantile(vw.temp.mth.yr$min_temp, 0.24)
+
+gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Recent date range
+
+```{r}
+print(paste0("From: ", min(vw_data_rec$Date)), row.names=FALSE)
+print(paste0("To: ", max(vw_data_rec$Date)), row.names=FALSE)
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Recent Precipitation
+
+```{r}
+p1 <- vw_data_rec %>%
+  ggplot(aes(x=Date, y=Total.Precip))+geom_col(fill=precip_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  labs(x="", y="Total Daily Precipitation")
+
+ggplotly(p1)
+```
+
+### Monthly Precipation (red diamonds = current yr)
+
+```{r}
+## Ave precip by month ####
+# chart.title <- "Average Precipitation by Month"
+# sub.title <- "(red marker is curr. yr.)"
+# p2 <- ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
+#   geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+#   scale_y_continuous(expand=c(0.1,0.1))+
+#   labs(title=chart.title, subtitle=sub.title, x="", y="Ave. Precipitation")
+# ggplotly(p2)
+
+
+## Range in precipitation by month ####
+chart.title <- "Monthly Precip. Ranges during Period"
+sub.title <- "(red markers: current yr.)"
+p2 <- ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot(fill=precip_color)+
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+  labs(x="", y="Mthly Precipitation")
+ggplotly(p2)
+
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Recent Temperature (dot = daily ave.; lines = period aves.)
+
+```{r}
+
+t1 <-  vw_data_rec %>%
+  ggplot(aes(x=Date))+ ## if initial y aesthetic included, will show in each overlay in plotly
+  geom_col(aes(y=Max.Temp), fill=warm_color, color='white')+
+  geom_col(aes(y=Mean.Temp), fill=cool_color, color='white')+
+  geom_point(aes(y=Mean.Temp), color='black', size=2)+
+  geom_col(aes(y=Min.Temp), fill='white')+
+  geom_hline(yintercept=mean(vw_data_rec$Max.Temp), linetype='dotted', color=warm_color)+
+  geom_hline(yintercept=mean(vw_data_rec$Mean.Temp), linetype='dotted', color='grey50')+
+  geom_hline(yintercept=mean(vw_data_rec$Min.Temp), linetype='dotted', color=cool_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  scale_x_date(expand=c(0,0))+
+  theme(panel.grid = element_blank())+
+  #theme(panel.background = element_rect(fill='white'))+
+  #theme(panel.grid.major.y = element_blank(),
+        #panel.grid.minor.y = element_blank())+ ## hiding horizontal grid due to white bar blocking
+  labs(x="", y="Max Daily Temperature")
+
+ggplotly(t1)
+
+```
+
+### Monthly Temperature Comp. (red diamonds = current yr)
+
+
+
 ```{r}
 ## Distribution of temperature by month ####
 
 ## Range in temperature by month ####
 chart.title <- "Monthly Temp. Ranges during Period (Red markers: current yr.)"
-t2 <- ggplot(vw.temp.mth.yr, aes(x=Month, y=ave_temp))+geom_boxplot()+
+t2 <- ggplot(vw.temp.mth.yr, aes(x=Month, y=ave_temp))+geom_boxplot(fill=cool_color)+
   geom_point(data=vw.temp.mth.curr.yr, aes(x=Month, y=ave_temp),shape=18, color='red', size=2.5)+
   labs(x="", y="Ave. Temperature") ## subtitle doesn't work with ggplotly
 ggplotly(t2)
