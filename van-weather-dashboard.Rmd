@@ -240,11 +240,9 @@ gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
 
 ### Recent date range
 
-```{r}
-print(paste0(num_days, " days"))
-print(paste0("From: ", min(vw_data_rec$Date)), row.names=FALSE)
-print(paste0("To: ", max(vw_data_rec$Date)), row.names=FALSE)
-```
+`r min(vw_data_rec$Date)` to `r max(vw_data_rec$Date)` <br />
+`r num_days` days <br />
+[Source info](van-weather-dashboard.html#source)
 
 Column {data-width=400}
 -----------------------------------------------------------------------
@@ -333,11 +331,12 @@ Source
 
 Produced by John Yuill <br />
 All source code and data used is available in my Github repo: <br />
-[proj-r-van-weather](https://github.com/jyuill/proj-r-van-weather)
+[proj-r-van-weather](https://github.com/jyuill/proj-r-van-weather){target='_blank'} <br />
+[latest processed data (csv) - download](data/van-weather.csv)
 
 **Govt of Canada Historical Weather data** <br />
 Data is collected from: <br />
-http://climate.weather.gc.ca/historical_data/search_historic_data_e.html
+[climate.weather.gc.ca/historical_data/search_historic_data_e.html]('http://climate.weather.gc.ca/historical_data/search_historic_data_e.html'){target='_blank'}
 
 Data is available from the government on a daily basis and updated *occasionally* here. ;) 
 
