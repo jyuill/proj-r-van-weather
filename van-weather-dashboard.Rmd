@@ -26,7 +26,7 @@ warm_color <- 'orangered'
 cool_color <- 'lightskyblue'
 ```
 
-```{r}
+```{r GET DATA}
 ## Get data
 ## get latest data using van-weather-import.R
 ## import saved data
@@ -42,14 +42,14 @@ vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fa
 
 ```
 
-```{r, PRECIPTIATION DATA PROC}
+```{r PRECIPTIATION DATA PROC}
 ## Monthly precipitation for each month, each year
 vw.precip.mth.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
   group_by(Year, Month) %>%
   summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
             precip_days=sum(precip.day, na.rm=TRUE))
 
-## Group by month
+## Group by month for summary data by month of the year
 vw.precip.mth <- vw.precip.mth.yr %>% group_by(Month) %>%
   summarize(ave_precip=mean(ttl_precip, na.rm=TRUE)) %>%
   mutate(pc_rank=percent_rank(ave_precip),
@@ -72,10 +72,30 @@ vw.precip.mth.curr.yr$Month <- as.integer(vw.precip.mth.curr.yr$Month)
 vw.precip.mth.curr.yr <- bind_rows(vw.precip.mth.curr.yr,
                                     vw.precip.yr.future.mth) 
 
+## YEARLY data
+## Monthly precipitation for each month, each year
+vw.precip.yr <- vw_data %>% mutate(precip.day=ifelse(Total.Precip>0,1,0)) %>% 
+  group_by(Year) %>%
+  summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+            precip_days=sum(precip.day, na.rm=TRUE),
+            ave_precip_pd=ttl_precip/365
+            )
 
+## Ave annual precip
+vw.precip.yr.smry <- vw.precip.yr %>% 
+  summarize(ave_precip=mean(ttl_precip, na.rm=TRUE),
+            ave_precip_days=mean(precip_days),
+            ave_precip_pd=ave_precip/365)
+
+## Current yr extrapolation
+recent_date <- max(vw_data$Date)
+days_yr <- as.numeric(recent_date - floor_date(recent_date, unit='years'))
+portion_yr <- days_yr/365
+precip_yr_extrapolate <- vw.precip.yr[nrow(vw.precip.yr), 'ttl_precip']*(1/portion_yr)
+precip_yr_extrapolate$Year <- factor(year(recent_date))
 ```
 
-```{r, TEMPERATURE DATA PROC}
+```{r TEMPERATURE DATA PROC}
 ## Monthly precipitation for each month, each year
 vw.temp.mth.yr <- vw_data %>% 
   group_by(Year, Month) %>%
@@ -123,17 +143,26 @@ vw.temp.mth.curr.yr$Month <- as.integer(vw.temp.mth.curr.yr$Month)
 vw.temp.mth.curr.yr <- bind_rows(vw.temp.mth.curr.yr,
                                     vw.temp.yr.future.mth) 
 
+## YEARLY temperature summary 
+vw.temp.yr <- vw_data %>% 
+  group_by(Year) %>%
+  summarize(ave_temp=mean(Mean.Temp, na.rm=TRUE),
+            ave_max_temp=mean(Max.Temp, na.rm=TRUE),
+            ave_min_temp=mean(Min.Temp, na.rm=TRUE),
+            max_temp=max(Max.Temp, na.rm=TRUE),
+            min_temp=min(Min.Temp, na.rm=TRUE))
+
 ```
 
-```{r, RECENT}
+Recent - 30d
+===================================================================
+
+```{r RECENT}
 ## recent data
 num_days <- 30
 vw_data_rec <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days)
 
 ```
-
-Recent
-===================================================================
 
 ```{r}
 ## use this space to create a synopsis that can be printed below
@@ -158,6 +187,16 @@ Weather has been `r synopsis_precip` and `r synopsis_temp` between `r min(vw_dat
 
 Column {data-width=200}
 -----------------------------------------------------------------------
+
+### Rainy Days
+
+```{r}
+## DAYS OF RAIN: calc number of days of precip
+precip_days <- nrow(vw_data_rec[vw_data_rec$Total.Precip>0,])
+
+valueBox(prettyNum(max(precip_days, na.rm=TRUE), big.mark=','),
+         href='')
+```
 
 ### Total Recent Precipitation (cm)
 
@@ -186,7 +225,6 @@ gauge(value=sum(vw_data_rec$Total.Precip, na.rm=TRUE),
       )
 
 ```
-
 
 ### Highest Recent Temp. (c)
 
@@ -311,7 +349,212 @@ ggplotly(t1)
 
 ### Monthly Temperature Comp. (red diamonds = current yr)
 
+```{r}
+## Distribution of temperature by month ####
 
+## Range in temperature by month ####
+chart.title <- "Monthly Temp. Ranges during Period (Red markers: current yr.)"
+t2 <- ggplot(vw.temp.mth.yr, aes(x=Month, y=ave_temp))+geom_boxplot(fill=cool_color)+
+  geom_point(data=vw.temp.mth.curr.yr, aes(x=Month, y=ave_temp),shape=18, color='red', size=2.5)+
+  labs(x="", y="Ave. Temperature") ## subtitle doesn't work with ggplotly
+ggplotly(t2)
+
+```
+
+90 days
+===================================================================
+
+```{r 90d}
+## recent data
+num_days <- 90
+vw_data_rec <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days)
+
+```
+
+```{r}
+## use this space to create a synopsis that can be printed below
+synopsis_precip <- if(sum(vw_data_rec$Total.Precip, na.rm=TRUE)>quantile(vw.precip.mth.yr$ttl_precip, 0.75)){
+  "WET" 
+} else if(sum(vw_data_rec$Total.Precip, na.rm=TRUE)>quantile(vw.precip.mth.yr$ttl_precip, 0.25)) {
+  "MILDLY WET"
+} else {
+  "DRY"
+}
+
+synopsis_temp <- if(max(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.mth.yr$max_temp, 0.75)){
+  "HOT" 
+} else if(sum(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.mth.yr$max_temp, 0.25)) {
+  "WARM"
+} else {
+  "COOL"
+}
+```
+
+Weather has been `r synopsis_precip` and `r synopsis_temp` between `r min(vw_data_rec$Date)` and `r max(vw_data_rec$Date)`.
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Rainy Days
+
+```{r}
+## DAYS OF RAIN: calc number of days of precip
+precip_days <- nrow(vw_data_rec[vw_data_rec$Total.Precip>0,])
+
+valueBox(prettyNum(max(precip_days, na.rm=TRUE), big.mark=','),
+         href='')
+```
+
+### Total Precipitation (cm)
+
+```{r}
+#valueBox(prettyNum(sum(vw_data_rec$Total.Precip, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+```
+
+```{r}
+s1 <- quantile(vw.precip.mth.yr$ttl_precip, 0.75)
+s2 <- max(vw.precip.mth.yr$ttl_precip)
+w1 <- quantile(vw.precip.mth.yr$ttl_precip, 0.25)
+w2 <- quantile(vw.precip.mth.yr$ttl_precip, 0.74)
+d1 <- min(vw.precip.mth.yr$ttl_precip, na.rm=TRUE)
+d2 <- quantile(vw.precip.mth.yr$ttl_precip, 0.24)
+
+gauge(value=sum(vw_data_rec$Total.Precip, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='cm'
+      )
+
+```
+
+### Highest Temp. (c)
+
+```{r}
+#valueBox(prettyNum(max(vw_data_rec$Max.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.mth.yr$max_temp, 0.75, na.rm=TRUE)
+s2 <- max(vw.temp.mth.yr$max_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.mth.yr$max_temp, 0.25, na.rm=TRUE)
+w2 <- quantile(vw.temp.mth.yr$max_temp, 0.74, na.rm=TRUE)
+d1 <- min(vw.temp.mth.yr$max_temp, na.rm=TRUE)
+d2 <- quantile(vw.temp.mth.yr$max_temp, 0.24, na.rm=TRUE)
+
+gauge(value=max(vw_data_rec$Max.Temp, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Lowest Temp. (c)
+
+```{r}
+#valueBox(prettyNum(min(vw_data_rec$Min.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.mth.yr$min_temp, 0.75)
+s2 <- max(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.mth.yr$min_temp, 0.25)
+w2 <- quantile(vw.temp.mth.yr$min_temp, 0.74)
+d1 <- min(vw.temp.mth.yr$min_temp, na.rm=TRUE)
+d2 <- quantile(vw.temp.mth.yr$min_temp, 0.24)
+
+gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Date range
+
+`r min(vw_data_rec$Date)` to `r max(vw_data_rec$Date)` <br />
+`r num_days` days <br />
+[Source info](van-weather-dashboard.html#source)
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Precipitation
+
+```{r}
+p1 <- vw_data_rec %>%
+  ggplot(aes(x=Date, y=Total.Precip))+geom_col(fill=precip_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  labs(x="", y="Total Daily Precipitation")
+
+ggplotly(p1)
+```
+
+### Monthly Precipation (red diamonds = current yr)
+
+```{r}
+## Ave precip by month ####
+# chart.title <- "Average Precipitation by Month"
+# sub.title <- "(red marker is curr. yr.)"
+# p2 <- ggplot(vw.precip.mth, aes(x=Month, y=ave_precip))+geom_col()+
+#   geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+#   scale_y_continuous(expand=c(0.1,0.1))+
+#   labs(title=chart.title, subtitle=sub.title, x="", y="Ave. Precipitation")
+# ggplotly(p2)
+
+
+## Range in precipitation by month ####
+chart.title <- "Monthly Precip. Ranges during Period"
+sub.title <- "(red markers: current yr.)"
+p2 <- ggplot(vw.precip.mth.yr, aes(x=Month, y=ttl_precip))+geom_boxplot(fill=precip_color)+
+  geom_point(data=vw.precip.mth.curr.yr, aes(x=Month, y=ttl_precip),shape=18, color='red', size=2.5)+
+  labs(x="", y="Mthly Precipitation")
+ggplotly(p2)
+
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Temperature (dot = daily ave.; lines = period aves.)
+
+```{r}
+
+t1 <-  vw_data_rec %>%
+  ggplot(aes(x=Date))+ ## if initial y aesthetic included, will show in each overlay in plotly
+  geom_col(aes(y=Max.Temp), fill=warm_color, color='white')+
+  geom_col(aes(y=Mean.Temp), fill=cool_color, color='white')+
+  geom_point(aes(y=Mean.Temp), color='black', size=1)+
+  geom_col(aes(y=Min.Temp), fill='white')+
+  geom_hline(yintercept=mean(vw_data_rec$Max.Temp), linetype='dotted', color=warm_color)+
+  geom_hline(yintercept=mean(vw_data_rec$Mean.Temp), linetype='dotted', color='grey50')+
+  geom_hline(yintercept=mean(vw_data_rec$Min.Temp), linetype='dotted', color=cool_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  scale_x_date(expand=c(0,0))+
+  theme(panel.grid = element_blank())+
+  #theme(panel.background = element_rect(fill='white'))+
+  #theme(panel.grid.major.y = element_blank(),
+        #panel.grid.minor.y = element_blank())+ ## hiding horizontal grid due to white bar blocking
+  labs(x="", y="Max Daily Temperature")
+
+ggplotly(t1)
+
+```
+
+### Monthly Temperature Comp. (red diamonds = current yr)
 
 ```{r}
 ## Distribution of temperature by month ####
@@ -325,6 +568,225 @@ ggplotly(t2)
 
 ```
 
+1 year
+===================================================================
+
+```{r 1yr}
+## recent data
+num_days <- 365
+vw_data_rec <- vw_data %>% filter(Date>=max(vw_data$Date)-num_days)
+
+```
+
+```{r}
+## use this space to create a synopsis that can be printed below
+## calc ave precip per day for comparison
+## remove most recent yr for calculating distribution of ave daily precip
+vw.precip.yr.prev <- vw.precip.yr %>% filter(Year!=max(as.character(vw.precip.yr$Year)))
+## get most recent yr ave daily precip for comparison
+vw.precip.yr.curr_apd <- vw.precip.yr %>% filter(Year==max(as.character(vw.precip.yr$Year))) %>%
+  select(ave_precip_pd)
+## create precip synopsis
+synopsis_precip <- if(vw.precip.yr.curr_apd >quantile(vw.precip.yr.prev$ave_precip_pd, 0.75)){
+  "WET" 
+} else if(vw.precip.yr.curr_apd>quantile(vw.precip.yr.prev$ave_precip_pd, 0.25)) {
+  "MILDLY WET"
+} else {
+  "DRY"
+}
+
+## temp synopsis
+synopsis_temp <- if(max(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.yr$max_temp, 0.75)){
+  "HOT" 
+} else if(sum(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.yr$max_temp, 0.25)) {
+  "WARM"
+} else {
+  "COOL"
+}
+```
+
+Weather has been `r synopsis_precip` and `r synopsis_temp` so far in `r year(recent_date)`.
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Rainy Days
+
+```{r}
+## DAYS OF RAIN: calc number of days of precip
+precip_days <- nrow(vw_data_rec[vw_data_rec$Total.Precip>0,])
+
+valueBox(prettyNum(max(precip_days, na.rm=TRUE), big.mark=','),
+         href='')
+```
+
+### Total Precipitation (cm)
+
+```{r}
+#valueBox(prettyNum(sum(vw_data_rec$Total.Precip, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+```
+
+```{r}
+s1 <- quantile(vw.precip.yr$ttl_precip, 0.75)
+s2 <- max(vw.precip.yr$ttl_precip)
+w1 <- quantile(vw.precip.yr$ttl_precip, 0.25)
+w2 <- quantile(vw.precip.yr$ttl_precip, 0.74)
+d1 <- min(vw.precip.yr$ttl_precip, na.rm=TRUE)
+d2 <- quantile(vw.precip.yr$ttl_precip, 0.24)
+
+gauge(value=sum(vw_data_rec$Total.Precip, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='cm'
+      )
+
+```
+
+### Highest Temp. (c)
+
+```{r}
+#valueBox(prettyNum(max(vw_data_rec$Max.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.yr$max_temp, 0.75, na.rm=TRUE)
+s2 <- max(vw.temp.yr$max_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.yr$max_temp, 0.25, na.rm=TRUE)
+w2 <- quantile(vw.temp.yr$max_temp, 0.74, na.rm=TRUE)
+d1 <- min(vw.temp.yr$max_temp, na.rm=TRUE)
+d2 <- quantile(vw.temp.yr$max_temp, 0.24, na.rm=TRUE)
+
+gauge(value=max(vw_data_rec$Max.Temp, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Lowest Temp. (c)
+
+```{r}
+#valueBox(prettyNum(min(vw_data_rec$Min.Temp, na.rm=TRUE), big.mark=','),
+#         href='#trends')
+
+s1 <- quantile(vw.temp.yr$min_temp, 0.75)
+s2 <- max(vw.temp.yr$min_temp, na.rm=TRUE)
+w1 <- quantile(vw.temp.yr$min_temp, 0.25)
+w2 <- quantile(vw.temp.yr$min_temp, 0.74)
+d1 <- min(vw.temp.yr$min_temp, na.rm=TRUE)
+d2 <- quantile(vw.temp.yr$min_temp, 0.24)
+
+gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
+      min=d1,
+      max=s2,
+      sectors=gaugeSectors(
+        danger=c(s1[[1]],s2),
+        warning=c(w1[[1]],s1[[1]]),
+        success=c(d1,w1[[1]])
+        ),
+      symbol='c'
+      )
+```
+
+### Date range
+
+`r min(vw_data_rec$Date)` to `r max(vw_data_rec$Date)` <br />
+`r num_days` days <br />
+[Source info](van-weather-dashboard.html#source)
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Precipitation
+
+```{r}
+p1 <- vw_data_rec %>%
+  ggplot(aes(x=Date, y=Total.Precip))+geom_col(fill=precip_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  #theme(panel.grid = element_blank())+
+  labs(x="", y="Total Daily Precipitation")
+
+ggplotly(p1)
+```
+
+### Annual Precipation (black dot = current yr extrapolation)
+
+```{r}
+## Annual precipitation ####
+p2 <- ggplot(vw.precip.yr, aes(x=Year, y=ttl_precip))+geom_col(fill=precip_color)+
+  geom_hline(yintercept = mean(vw.precip.yr$ttl_precip), linetype='dotted', color='grey50')+
+  geom_point(data=precip_yr_extrapolate, aes(x=Year, y=ttl_precip))+
+  scale_y_continuous(expand=expansion(mult=c(0,0.05)), labels=comma)+
+  theme(panel.grid = element_blank(), 
+        axis.text.x =element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank())+
+  labs(x="", y="Annual Precipitation")
+ggplotly(p2)
+
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Temperature (dot = daily ave.; lines = period aves.)
+
+```{r}
+
+t1 <-  vw_data_rec %>% 
+  #filter(Date>'2020-09-01') %>%
+  ggplot(aes(x=Date))+ ## if initial y aesthetic included, will show in each overlay in plotly
+  #geom_col(aes(y=Max.Temp), fill=warm_color, color='white')+
+  #geom_col(aes(y=Mean.Temp), fill=cool_color, color='white')+
+  geom_line(aes(y=Max.Temp), color=warm_color, size=0.2, alpha=0.6)+
+  geom_line(aes(y=Min.Temp), color=cool_color, size=0.2, alpha=0.6)+
+  geom_line(aes(y=Mean.Temp))+
+  geom_point(aes(y=Mean.Temp), color='black', size=1)+
+  #geom_col(aes(y=Min.Temp), fill='white')+
+  geom_hline(yintercept=mean(vw_data_rec$Max.Temp), linetype='dotted', color=warm_color)+
+  geom_hline(yintercept=mean(vw_data_rec$Mean.Temp), linetype='dotted', color='grey50')+
+  geom_hline(yintercept=mean(vw_data_rec$Min.Temp), linetype='dotted', color=cool_color)+
+  scale_y_continuous(expand=expansion(add=c(0,2)))+
+  scale_x_date(expand=c(0,0))+
+  theme(panel.grid = element_blank())+
+  #theme(panel.background = element_rect(fill='white'))+
+  #theme(panel.grid.major.y = element_blank(),
+        #panel.grid.minor.y = element_blank())+ ## hiding horizontal grid due to white bar blocking
+  labs(x="", y="Max Daily Temperature")
+
+ggplotly(t1)
+
+```
+
+### Annual Temperature Comparisons
+
+```{r}
+## Distribution of temperature by year ####
+
+t2 <- ggplot(vw.temp.yr, aes(x=Year))+
+  geom_col(aes(y=max_temp), fill=warm_color)+
+  geom_col(aes(y=min_temp), fill=cool_color)+
+  geom_point(aes(y=ave_temp), color='black', size=2)+
+  geom_hline(yintercept=mean(vw.temp.yr$max_temp), linetype='dotted', color=warm_color)+
+  geom_hline(yintercept=mean(vw.temp.yr$ave_temp), linetype='dotted', color='grey50')+
+  geom_hline(yintercept=mean(vw.temp.yr$min_temp), linetype='dotted', color=cool_color)+
+  theme(panel.grid = element_blank(),
+         axis.text.x =element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank())+
+  labs(x="", y="Annual Temperature Ranges")
+
+ggplotly(t2)
+
+```
 
 Source
 ===================================================================
