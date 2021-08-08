@@ -1,7 +1,7 @@
 ---
 title: "Vancouver Weather"
 author: ""
-date: "2021-07-24"
+date: "2021-08-02"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -204,7 +204,7 @@ synopsis_temp <- if(max(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.mth.y
 }
 ```
 
-Weather has been DRY and HOT between 2021-06-23 and 2021-07-23.
+Weather has been DRY and HOT between 2021-07-02 and 2021-08-01.
 
 Column {data-width=200}
 -----------------------------------------------------------------------
@@ -252,7 +252,6 @@ gauge(value=sum(vw_data_rec$Total.Precip, na.rm=TRUE),
 ```
 
 ```
-## PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
 ## PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
 ```
 
@@ -330,7 +329,7 @@ gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
 
 ### Recent date range
 
-2021-06-23 to 2021-07-23 <br />
+2021-07-02 to 2021-08-01 <br />
 30 days <br />
 [Source info](van-weather-dashboard.html#source)
 
@@ -475,7 +474,7 @@ synopsis_temp <- if(max(vw_data_rec$Max.Temp, na.rm=TRUE)>quantile(vw.temp.mth.y
 }
 ```
 
-Weather has been MILDLY WET and HOT between 2021-04-24 and 2021-07-23.
+Weather has been MILDLY WET and HOT between 2021-05-03 and 2021-08-01.
 
 Column {data-width=200}
 -----------------------------------------------------------------------
@@ -491,7 +490,7 @@ valueBox(prettyNum(max(precip_days, na.rm=TRUE), big.mark=','),
          href='')
 ```
 
-<!--html_preserve--><span class="value-output" data-href="">23</span><!--/html_preserve-->
+<!--html_preserve--><span class="value-output" data-href="">18</span><!--/html_preserve-->
 
 ### Total Precipitation (cm)
 
@@ -600,7 +599,7 @@ gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
 
 ### Date range
 
-2021-04-24 to 2021-07-23 <br />
+2021-05-03 to 2021-08-01 <br />
 90 days <br />
 [Source info](van-weather-dashboard.html#source)
 
@@ -878,7 +877,7 @@ gauge(value=min(vw_data_rec$Min.Temp, na.rm=TRUE),
 
 ### Date range
 
-2020-07-23 to 2021-07-23 <br />
+2020-08-01 to 2021-08-01 <br />
 365 days <br />
 [Source info](van-weather-dashboard.html#source)
 
@@ -1015,7 +1014,7 @@ Data is available from the government on a daily basis and updated *occasionally
 Date range currently covered:
 
 **Earliest date:** *1970-01-01* <br />
-**Most recent date:** *2021-07-23* <br />
+**Most recent date:** *2021-08-01* <br />
 
 The following weather stations are represented. Not the preferred approach but I couldn't find continuous data for any single weather station.
 
@@ -1031,7 +1030,7 @@ vw_stn %>% ggplot(aes(x=Station, y=Year))+geom_point()+
   labs(title='Weather Stations',x='')
 ```
 
-![plot of chunk unnamed-chunk-124](figure/unnamed-chunk-124-1.png)
+![plot of chunk unnamed-chunk-31](figure/unnamed-chunk-31-1.png)
 
 ### Data Structure
 
@@ -1043,18 +1042,18 @@ str(vw_data)
 ```
 
 ```
-## spec_tbl_df [18,831 × 11] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ Date        : Date[1:18831], format: "1970-01-01" "1970-01-02" "1970-01-03" "1970-01-04" ...
+## spec_tbl_df [18,840 × 11] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ Date        : Date[1:18840], format: "1970-01-01" "1970-01-02" "1970-01-03" "1970-01-04" ...
 ##  $ Year        : Factor w/ 52 levels "1970","1971",..: 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ Month       : Factor w/ 12 levels "1","2","3","4",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Day         : num [1:18831] 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Day         : num [1:18840] 1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Season      : Factor w/ 4 levels "Winter","Spring",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Season.Yr   : num [1:18831] 1970 1970 1970 1970 1970 1970 1970 1970 1970 1970 ...
-##  $ Max.Temp    : num [1:18831] 6.1 2.2 5 2.8 1.7 5.6 3.3 4.4 7.2 5.6 ...
-##  $ Min.Temp    : num [1:18831] -1.7 0 -1.7 -3.3 -2.8 -1.7 -3.3 0 2.8 -2.8 ...
-##  $ Mean.Temp   : num [1:18831] 2.2 1.1 1.7 -0.3 -0.6 2 0 2.2 5 1.4 ...
-##  $ Total.Precip: num [1:18831] 0 1 0.5 0 0 0 0 4.6 6.6 0.5 ...
-##  $ Station     : chr [1:18831] "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" ...
+##  $ Season.Yr   : num [1:18840] 1970 1970 1970 1970 1970 1970 1970 1970 1970 1970 ...
+##  $ Max.Temp    : num [1:18840] 6.1 2.2 5 2.8 1.7 5.6 3.3 4.4 7.2 5.6 ...
+##  $ Min.Temp    : num [1:18840] -1.7 0 -1.7 -3.3 -2.8 -1.7 -3.3 0 2.8 -2.8 ...
+##  $ Mean.Temp   : num [1:18840] 2.2 1.1 1.7 -0.3 -0.6 2 0 2.2 5 1.4 ...
+##  $ Total.Precip: num [1:18840] 0 1 0.5 0 0 0 0 4.6 6.6 0.5 ...
+##  $ Station     : chr [1:18840] "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" ...
 ##  - attr(*, "spec")=
 ##   .. cols(
 ##   ..   Date = col_date(format = ""),
@@ -1078,17 +1077,17 @@ summary(vw_data)
 ```
 ##       Date                 Year           Month           Day           Season       Season.Yr       Max.Temp    
 ##  Min.   :1970-01-01   1972   :  366   1      :1612   Min.   : 1.00   Winter:4661   Min.   :1970   Min.   :-8.70  
-##  1st Qu.:1982-11-21   1976   :  366   3      :1612   1st Qu.: 8.00   Spring:4784   1st Qu.:1982   1st Qu.: 8.90  
-##  Median :1995-10-13   1980   :  366   5      :1612   Median :16.00   Summer:4745   Median :1995   Median :13.30  
-##  Mean   :1995-10-12   1984   :  366   7      :1604   Mean   :15.72   Fall  :4641   Mean   :1995   Mean   :13.84  
-##  3rd Qu.:2008-09-01   1988   :  366   8      :1581   3rd Qu.:23.00                 3rd Qu.:2008   3rd Qu.:19.00  
-##  Max.   :2021-07-23   1992   :  366   10     :1581   Max.   :31.00                 Max.   :2021   Max.   :34.40  
-##                       (Other):16635   (Other):9229                                                NA's   :46     
+##  1st Qu.:1982-11-23   1976   :  366   3      :1612   1st Qu.: 8.00   Spring:4784   1st Qu.:1982   1st Qu.: 8.90  
+##  Median :1995-10-17   1980   :  366   5      :1612   Median :16.00   Summer:4754   Median :1995   Median :13.30  
+##  Mean   :1995-10-17   1984   :  366   7      :1612   Mean   :15.73   Fall  :4641   Mean   :1995   Mean   :13.85  
+##  3rd Qu.:2008-09-08   1988   :  366   8      :1582   3rd Qu.:23.00                 3rd Qu.:2008   3rd Qu.:19.00  
+##  Max.   :2021-08-01   1992   :  366   10     :1581   Max.   :31.00                 Max.   :2021   Max.   :34.40  
+##                       (Other):16644   (Other):9229                                                NA's   :46     
 ##     Min.Temp         Mean.Temp      Total.Precip      Station         
-##  Min.   :-15.200   Min.   :-11.5   Min.   : 0.000   Length:18831      
+##  Min.   :-15.200   Min.   :-11.5   Min.   : 0.000   Length:18840      
 ##  1st Qu.:  2.800   1st Qu.:  6.0   1st Qu.: 0.000   Class :character  
 ##  Median :  6.800   Median : 10.0   Median : 0.000   Mode  :character  
-##  Mean   :  6.711   Mean   : 10.3   Mean   : 3.211                     
+##  Mean   :  6.715   Mean   : 10.3   Mean   : 3.209                     
 ##  3rd Qu.: 11.300   3rd Qu.: 15.2   3rd Qu.: 3.600                     
 ##  Max.   : 22.400   Max.   : 28.4   Max.   :91.600                     
 ##  NA's   :39        NA's   :48      NA's   :54
