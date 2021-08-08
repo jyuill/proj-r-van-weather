@@ -1,7 +1,7 @@
 ---
 title: "Vancouver Weather - Historical Review"
 author: "John Yuill"
-date: "2021-08-02"
+date: "2021-08-08"
 output:
   html_document:
     theme: spacelab
@@ -27,7 +27,7 @@ There are **gaps** and mixture of **different weather stations** for continuity.
 
 
 
-Date range: **1970-01-01** to **2021-08-01** <br />
+Date range: **1970-01-01** to **2021-08-07** <br />
 Precipitation units: **cm** <br />
 Temperature units: **celsuis**
 
@@ -873,7 +873,7 @@ vw_stn %>% ggplot(aes(x=Station, y=Year))+geom_point()+
 Data is available from the government website on a daily basis and updated occasionally here. Date range currently covered:
 
 **Earliest date:** *1970-01-01* <br />
-**Most recent date:** *2021-08-01* <br />
+**Most recent date:** *2021-08-07* <br />
 
 ### Data Structure
 
@@ -885,18 +885,18 @@ str(vw_data)
 ```
 
 ```
-## spec_tbl_df [18,840 × 11] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ Date        : Date[1:18840], format: "1970-01-01" "1970-01-02" "1970-01-03" "1970-01-04" ...
+## spec_tbl_df [18,846 × 11] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ Date        : Date[1:18846], format: "1970-01-01" "1970-01-02" "1970-01-03" "1970-01-04" ...
 ##  $ Year        : Factor w/ 52 levels "1970","1971",..: 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ Month       : Factor w/ 12 levels "1","2","3","4",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Day         : num [1:18840] 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Day         : num [1:18846] 1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Season      : Factor w/ 4 levels "Winter","Spring",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Season.Yr   : num [1:18840] 1970 1970 1970 1970 1970 1970 1970 1970 1970 1970 ...
-##  $ Max.Temp    : num [1:18840] 6.1 2.2 5 2.8 1.7 5.6 3.3 4.4 7.2 5.6 ...
-##  $ Min.Temp    : num [1:18840] -1.7 0 -1.7 -3.3 -2.8 -1.7 -3.3 0 2.8 -2.8 ...
-##  $ Mean.Temp   : num [1:18840] 2.2 1.1 1.7 -0.3 -0.6 2 0 2.2 5 1.4 ...
-##  $ Total.Precip: num [1:18840] 0 1 0.5 0 0 0 0 4.6 6.6 0.5 ...
-##  $ Station     : chr [1:18840] "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" ...
+##  $ Season.Yr   : num [1:18846] 1970 1970 1970 1970 1970 1970 1970 1970 1970 1970 ...
+##  $ Max.Temp    : num [1:18846] 6.1 2.2 5 2.8 1.7 5.6 3.3 4.4 7.2 5.6 ...
+##  $ Min.Temp    : num [1:18846] -1.7 0 -1.7 -3.3 -2.8 -1.7 -3.3 0 2.8 -2.8 ...
+##  $ Mean.Temp   : num [1:18846] 2.2 1.1 1.7 -0.3 -0.6 2 0 2.2 5 1.4 ...
+##  $ Total.Precip: num [1:18846] 0 1 0.5 0 0 0 0 4.6 6.6 0.5 ...
+##  $ Station     : chr [1:18846] "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" "VANCOUVER INT'L A" ...
 ##  - attr(*, "spec")=
 ##   .. cols(
 ##   ..   Date = col_date(format = ""),
@@ -920,20 +920,20 @@ summary(vw_data)
 ```
 ##       Date                 Year           Month           Day           Season       Season.Yr       Max.Temp    
 ##  Min.   :1970-01-01   1972   :  366   1      :1612   Min.   : 1.00   Winter:4661   Min.   :1970   Min.   :-8.70  
-##  1st Qu.:1982-11-23   1976   :  366   3      :1612   1st Qu.: 8.00   Spring:4784   1st Qu.:1982   1st Qu.: 8.90  
-##  Median :1995-10-17   1980   :  366   5      :1612   Median :16.00   Summer:4754   Median :1995   Median :13.30  
-##  Mean   :1995-10-17   1984   :  366   7      :1612   Mean   :15.73   Fall  :4641   Mean   :1995   Mean   :13.85  
-##  3rd Qu.:2008-09-08   1988   :  366   8      :1582   3rd Qu.:23.00                 3rd Qu.:2008   3rd Qu.:19.00  
-##  Max.   :2021-08-01   1992   :  366   10     :1581   Max.   :31.00                 Max.   :2021   Max.   :34.40  
-##                       (Other):16644   (Other):9229                                                NA's   :46     
-##     Min.Temp         Mean.Temp      Total.Precip      Station         
-##  Min.   :-15.200   Min.   :-11.5   Min.   : 0.000   Length:18840      
-##  1st Qu.:  2.800   1st Qu.:  6.0   1st Qu.: 0.000   Class :character  
-##  Median :  6.800   Median : 10.0   Median : 0.000   Mode  :character  
-##  Mean   :  6.715   Mean   : 10.3   Mean   : 3.209                     
-##  3rd Qu.: 11.300   3rd Qu.: 15.2   3rd Qu.: 3.600                     
-##  Max.   : 22.400   Max.   : 28.4   Max.   :91.600                     
-##  NA's   :39        NA's   :48      NA's   :54
+##  1st Qu.:1982-11-25   1976   :  366   3      :1612   1st Qu.: 8.00   Spring:4784   1st Qu.:1982   1st Qu.: 8.90  
+##  Median :1995-10-20   1980   :  366   5      :1612   Median :16.00   Summer:4760   Median :1995   Median :13.40  
+##  Mean   :1995-10-20   1984   :  366   7      :1612   Mean   :15.72   Fall  :4641   Mean   :1995   Mean   :13.85  
+##  3rd Qu.:2008-09-12   1988   :  366   8      :1588   3rd Qu.:23.00                 3rd Qu.:2008   3rd Qu.:19.00  
+##  Max.   :2021-08-07   1992   :  366   10     :1581   Max.   :31.00                 Max.   :2021   Max.   :34.40  
+##                       (Other):16650   (Other):9229                                                NA's   :46     
+##     Min.Temp         Mean.Temp       Total.Precip      Station         
+##  Min.   :-15.200   Min.   :-11.50   Min.   : 0.000   Length:18846      
+##  1st Qu.:  2.800   1st Qu.:  6.00   1st Qu.: 0.000   Class :character  
+##  Median :  6.800   Median : 10.10   Median : 0.000   Mode  :character  
+##  Mean   :  6.718   Mean   : 10.31   Mean   : 3.209                     
+##  3rd Qu.: 11.300   3rd Qu.: 15.20   3rd Qu.: 3.600                     
+##  Max.   : 22.400   Max.   : 28.40   Max.   :91.600                     
+##  NA's   :39        NA's   :48       NA's   :54
 ```
 
 * Looks like quite a few NAs for temp and precip; as long as they are spread out, shouldn't be a problem

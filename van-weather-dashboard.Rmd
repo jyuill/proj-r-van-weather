@@ -6,6 +6,9 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
+    navbar:
+      - {title: "JY Portfolio site", href: "https://jyuill.github.io", align: right}
+    source_code: https://github.com/jyuill/proj-r-van-weather/blob/6b24a94873ef660636ff6dfc38f1ab3dcfa35753/van-weather-dashboard.Rmd
     includes:
       in_header: gtm-head-jyuill-github-io.html
       before_body: gtm-body-jyuill-github-io.html
@@ -788,7 +791,7 @@ ggplotly(t2)
 
 ```
 
-Source
+Data Source
 ===================================================================
 
 Produced by John Yuill <br />
