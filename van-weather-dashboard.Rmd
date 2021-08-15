@@ -801,7 +801,7 @@ All source code and data used is available in my Github repo: <br />
 
 **Govt of Canada Historical Weather data** <br />
 Data is collected from: <br />
-[climate.weather.gc.ca/historical_data/search_historic_data_e.html]('http://climate.weather.gc.ca/historical_data/search_historic_data_e.html'){target='_blank'}
+[climate.weather.gc.ca/historical_data/search_historic_data_e.html](http://climate.weather.gc.ca/historical_data/search_historic_data_e.html){target='_blank'}
 
 Data is available from the government on a daily basis and updated *occasionally* here. ;) 
 
