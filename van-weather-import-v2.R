@@ -86,12 +86,20 @@ fVw_stn_clean <- function(vw.new_stn, maxD){
 ## Get existing data to determine what date to start from
 van_exist <- read_csv('output/van-weather.csv')
 van_exist_maxD <- max(van_exist$Date)
-
+van_exist_mth_d <- paste0(month(max(van_exist_maxD)),"-",day(max(van_exist_maxD)))
 ## > Set station & yr ####
 ## Get data for selected station - using function above
 stn <- 'VANCOUVER INTL A' ## currently mostly reliable station
 stn_alt <- 'VANCOUVER HARBOUR CS' ## 2nd most reliable - can be used if precip data missing
-yr_data <- year(Sys.Date())
+## set data year:
+## - if less than last day of yr, min of year of most recent data OR current year 
+## - if last day of yr, add one day
+if(van_exist_mth_d<'12-31'){
+  yr_data <- min(year(van_exist_maxD), year(Sys.Date()))
+} else {
+  yr_data <- year(van_exist_maxD+1)
+}
+
 ## > Run data fn ####
 vw.new_stn <- fStn_data(stn, yr_data)
 ## > Run cleaning fn ####
@@ -175,8 +183,11 @@ summary(vw_all$Date)
 table(duplicated(vw_all$Date))
 
 ## check incomplete cases
-#vw_all[!complete.cases(vw_all),]
+vw_all[!complete.cases(vw_all),]
+vw_na <- vw_all[!complete.cases(vw_all),]
+tail(vw_na)
 
+tail(vw_all)
 
 
 
