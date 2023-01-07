@@ -35,8 +35,16 @@ A look at weather patterns in Vancouver, BC using various data visualization app
 
 Data is shown below in various charts. Also available in other forms in this repo:
 
-1. **van-weather-v2.Rmd**: deep-dive into weather stats, with some attempts at modeling.
-2. **van-weathe
+1. **van-weather-report**: deep-dive into weather stats, with some light modeling.
+2. **van-weather-dashboard**: flexdashboard showing 30d, 90d, annual weather patterns
+
+Both of these:
+
+* leverage the same data collection, described below
+* available online at [jyuill.github.io](https://jyuill.github.io)
+* use the **two "gtm-..."** files to include gtm code for GA4
+
+van-weather-report.Rmd also uses _navbar.html for navigation bar. 
 
 ## Data Collection
 
@@ -47,7 +55,17 @@ Data is collected from Govt of Canada website:
 3. select 'daily', select 'year'
 4. 'Go' goes to a page to access results for year
 
-(process is automated in 'van-weather-import-v2.R')
+## Automated Data Collection
+
+**van-weather-import-v2.R** is used to update data
+
+Convenient update process: 
+
+* Run **01-update-wrapper.R** to:
+    - update data
+    - run Rmd files to update report and dashboard
+    - copy files to jyuill.github.io site repo for push/publish
+
 
 ```{r IMPORT DATA}
 ## get latest data using van-weather-import.R
