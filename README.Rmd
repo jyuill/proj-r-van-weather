@@ -55,18 +55,6 @@ Data is collected from Govt of Canada website:
 3. select 'daily', select 'year'
 4. 'Go' goes to a page to access results for year
 
-## Automated Data Collection
-
-**van-weather-import-v2.R** is used to update data
-
-Convenient update process: 
-
-* Run **01-update-wrapper.R** to:
-    - update data
-    - run Rmd files to update report and dashboard
-    - copy files to jyuill.github.io site repo for push/publish
-
-
 ```{r IMPORT DATA}
 ## get latest data using van-weather-import.R
 ## import saved data
@@ -84,6 +72,17 @@ levels(vw_data$Season)
 
 **Earliest date:** *`r min(vw_data$Date)`* <br />
 **Most recent date:** *`r max(vw_data$Date)`*
+
+## Automated Data Collection
+
+**van-weather-import-v2.R** is used to update data
+
+Convenient update process: 
+
+* Run **01-update-wrapper.R** to:
+    1. update data
+    2. run Rmd files to update report and dashboard with new data
+    3. copy files to jyuill.github.io site repo for push/publish
 
 ## Precipitation 
 

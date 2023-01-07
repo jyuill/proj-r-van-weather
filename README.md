@@ -41,6 +41,13 @@ Data is collected from Govt of Canada website:
 3.  select ‘daily’, select ‘year’
 4.  ‘Go’ goes to a page to access results for year
 
+<!-- -->
+
+    ## [1] "Winter" "Spring" "Summer" "Fall"
+
+**Earliest date:** *1970-01-01* <br /> **Most recent date:**
+*2023-01-03*
+
 ## Automated Data Collection
 
 **van-weather-import-v2.R** is used to update data
@@ -48,16 +55,9 @@ Data is collected from Govt of Canada website:
 Convenient update process:
 
 - Run **01-update-wrapper.R** to:
-  - update data
-  - run Rmd files to update report and dashboard
-  - copy files to jyuill.github.io site repo for push/publish
-
-<!-- -->
-
-    ## [1] "Winter" "Spring" "Summer" "Fall"
-
-**Earliest date:** *1970-01-01* <br /> **Most recent date:**
-*2023-01-03*
+  1.  update data
+  2.  run Rmd files to update report and dashboard with new data
+  3.  copy files to jyuill.github.io site repo for push/publish
 
 ## Precipitation
 
