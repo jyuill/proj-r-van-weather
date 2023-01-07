@@ -31,6 +31,13 @@ A look at weather patterns in Vancouver, BC using various data visualization app
 * monthly
 * precipitation, temperature
 
+## Data Presentation
+
+Data is shown below in various charts. Also available in other forms in this repo:
+
+1. **van-weather-v2.Rmd**: deep-dive into weather stats, with some attempts at modeling.
+2. **van-weathe
+
 ## Data Collection
 
 Data is collected from Govt of Canada website:
@@ -40,7 +47,7 @@ Data is collected from Govt of Canada website:
 3. select 'daily', select 'year'
 4. 'Go' goes to a page to access results for year
 
-(process is automated in 'van-weather-import.R')
+(process is automated in 'van-weather-import-v2.R')
 
 ```{r IMPORT DATA}
 ## get latest data using van-weather-import.R
