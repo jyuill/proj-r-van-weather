@@ -16,22 +16,33 @@ library(plotly)
 theme_set(theme_light())
 
 ## import data
-vw_data <- read_csv("van-weather.csv") 
+vw_data <- read_csv(here('Van-weather-app','van-weather.csv'))
+#vw_data <- read_csv("van-weather.csv") 
 ## convert Year, Month to factors for better charting
 vw_data$Year <- as.factor(vw_data$Year)
 vw_data$Month <- as.factor(vw_data$Month)
 vw_data$Season <- as.factor(vw_data$Season)
 ## set Season order
 vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fall"))
+## aggregate data by month for monthly view
 vw_mth <- vw_data %>% group_by(Year, Month) %>% summarize(
   precip=sum(Total.Precip, na.rm=TRUE),
   meanTemp=mean(Mean.Temp, na.rm=TRUE),
   maxTemp=max(Max.Temp, na.rm=TRUE),
-  minTemp=min(Min.Tepm, na.rm=TRUE)
+  minTemp=min(Min.Temp, na.rm=TRUE)
 ) %>% mutate(
-  yrmon = ifelse(Month<10, paste0(Year,"-0",Month), paste0(Year,"-",Month))
+  yrmthdt = ifelse(as.character(Month)<10, paste0(Year,"-0",Month,"-01"), paste0(Year,"-",Month,"-01")),
 )
-
+vw_mth$yrmthdt <- ymd(vw_mth$yrmthdt)
+## aggregrate data by year for annual view
+vw_yr <- vw_data %>% group_by(Year) %>% summarize(
+  precip=sum(Total.Precip, na.rm=TRUE),
+  meanTemp=mean(Mean.Temp, na.rm=TRUE),
+  maxTemp=max(Max.Temp, na.rm=TRUE),
+  minTemp=min(Min.Temp, na.rm=TRUE)
+) %>% mutate(
+  yrdt = ymd(paste(Year,"-01-01"))
+)
 
 # Define server logic required to show weather data
 function(input, output, session) {
@@ -49,23 +60,50 @@ function(input, output, session) {
     output$maxTemp <- renderText({smry()[[3]]})
     output$minTemp <- renderText({smry()[[4]]})
     
-    ## main precip plot
+    ## main precip plot ======
     output$precipPlot <- renderPlot({
         # draw the precip bar chart
+      if(input$grain=='Daily'){
         vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
         ggplot(aes(x=Date, y=Total.Precip))+geom_col()+
         labs(x="", y="Precip. (cm)")
+      } else if(input$grain == 'Monthly'){ ## mthly precip
+        vw_mth %>% filter(yrmthdt >= input$dtrng[1] & yrmthdt <= input$dtrng[2]) %>%
+          ggplot(aes(x=yrmthdt, y=precip))+geom_col()+
+          labs(x="", y="Precip. (cm)")
+      } else if(input$grain == 'Annually'){ ## annual precip
+        vw_yr %>% filter(yrdt >= input$dtrng[1] & yrdt <= input$dtrng[2]) %>%
+          ggplot(aes(x=yrdt, y=precip))+geom_col()+
+          labs(x="", y="Precip. (cm)")
+      } ## end annual precip
     })
-    ## main temp chart
+    ## main temp chart ======
     output$tempPlot <- renderPlot({
-      # draw the temp line chart
-      vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
-        ggplot(aes(x=Date, y=Mean.Temp))+
-        geom_ribbon(aes(ymin=Min.Temp, ymax=Max.Temp), fill='grey80')+
-        geom_line()+
-        geom_point()+
-        geom_hline(yintercept=0)+
-        labs(x="", y="Temp. (c): Mean w/Min-Max shadow")
-    })
-
+      # draw the temp line chart for daily data
+      if(input$grain=='Daily'){
+        vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
+          ggplot(aes(x=Date, y=Mean.Temp))+
+          geom_ribbon(aes(ymin=Min.Temp, ymax=Max.Temp), fill='grey80')+
+          geom_line()+
+          geom_point()+
+          geom_hline(yintercept=0)+
+          labs(x="", y="Temp. (c): Mean w/Min-Max shadow")
+      } else if(input$grain == 'Monthly'){
+        vw_mth %>% filter(yrmthdt >= input$dtrng[1] & yrmthdt <= input$dtrng[2]) %>%
+          ggplot(aes(x=yrmthdt, y=meanTemp))+
+          geom_ribbon(aes(ymin=minTemp, ymax=maxTemp), fill='grey80')+
+          geom_line()+
+          geom_point()+
+          geom_hline(yintercept=0)+
+          labs(x="", y="Temp. (c): Mean w/Min-Max shadow")
+      } else if(input$grain == 'Annually'){
+        vw_yr %>% filter(yrdt >= input$dtrng[1] & yrdt <= input$dtrng[2]) %>%
+          ggplot(aes(x=yrdt, y=meanTemp))+
+          geom_ribbon(aes(ymin=minTemp, ymax=maxTemp), fill='grey80')+
+          geom_line()+
+          geom_point()+
+          geom_hline(yintercept=0)+
+          labs(x="", y="Temp. (c): Mean w/Min-Max shadow")
+      }
+    }) ## end temp plot
 }
