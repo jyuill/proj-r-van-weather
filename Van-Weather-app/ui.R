@@ -19,15 +19,7 @@ library(bslib)
 fluidPage(
   theme=bs_theme(bootswatch='darkly'),
   tags$head(
-    tags$style(HTML("
-      div.toptile {
-        border: 1px solid white;
-        padding: 5px;
-        margin: 5px;
-        background-color: grey;
-        text-align: center
-      }
-    ")),
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
   ),
     # Application title
     titlePanel("Vancouver Weather"),
@@ -39,14 +31,15 @@ fluidPage(
           dateRangeInput(inputId="dtrng", label="Date range", start="2022-09-01", end="2022-12-31"),
             ## date grain (daily, monthly, annually)
           selectizeInput(inputId='grain',label="Date granularity",
-                         choices=c('Daily','Mothly','Annually'),
+                         choices=c('Daily','Monthly','Annually'),
                          selected='Daily')          
         , width=3), ## end sidebar
         mainPanel(
           fluidRow(
             column(width=3,
                    tags$div("Total Precip.",
-                   tags$h3(textOutput(outputId='ttlPrecip')), class="toptile")),
+                    tags$h3(textOutput(outputId='ttlPrecip')), 
+                   class="toptile")),
             column(width=3, 
                    tags$div("Mean Temp.",
                    h3(textOutput(outputId='meanTemp')), class="toptile")),

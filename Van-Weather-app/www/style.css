@@ -2,8 +2,9 @@
 
 div.toptile {
         border: 1px solid white;
+        border-radius: 4px;
         padding: 5px;
         margin: 5px;
         background-color: grey;
-        text-align: center
+        text-align: center;
       }
