@@ -8,3 +8,9 @@ div.toptile {
         background-color: grey;
         text-align: center;
       }
+      
+div.footer {
+  margin: 20px 5px 5px 5px;
+  font-size: 0.9em;
+  /*border: 1px solid yellow; */
+}

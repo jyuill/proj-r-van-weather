@@ -60,7 +60,12 @@ fluidPage(
           plotOutput(
             outputId='tempPlot'
           ))
-        ) # end lower row
+        ), # end second row
+        fluidRow(
+          #div("A product from", strong("John Yuill"))
+          div("A product from", a(href="https://jyuill.github.io", strong("John Yuill")), ", Catbird Analytics", class='footer'),
+          #HTML("<a href='https://jyuill.github.io'><strong>John Yuill</strong></a>")
+        )
         , width=9) ## end main panel
     ) ## end sidebar layout
 )
