@@ -1,0 +1,9 @@
+/* dashboard styles */
+
+div.toptile {
+        border: 1px solid white;
+        padding: 5px;
+        margin: 5px;
+        background-color: grey;
+        text-align: center
+      }

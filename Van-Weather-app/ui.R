@@ -18,6 +18,17 @@ library(bslib)
 # Define UI for application that draws a histogram
 fluidPage(
   theme=bs_theme(bootswatch='darkly'),
+  tags$head(
+    tags$style(HTML("
+      div.toptile {
+        border: 1px solid white;
+        padding: 5px;
+        margin: 5px;
+        background-color: grey;
+        text-align: center
+      }
+    ")),
+  ),
     # Application title
     titlePanel("Vancouver Weather"),
 
@@ -33,14 +44,18 @@ fluidPage(
         , width=3), ## end sidebar
         mainPanel(
           fluidRow(
-            column(width=3,"Total Precip.",
-                   h3(textOutput(outputId='ttlPrecip'))),
-            column(width=3, "Mean Temp.",
-                   h3(textOutput(outputId='meanTemp'))),
-            column(width=3, "Max Temp.",
-                  h3(textOutput(outputId='maxTemp'))),
-            column(width=3, "Min Temp.",
-                   h3(textOutput(outputId='minTemp')))
+            column(width=3,
+                   tags$div("Total Precip.",
+                   tags$h3(textOutput(outputId='ttlPrecip')), class="toptile")),
+            column(width=3, 
+                   tags$div("Mean Temp.",
+                   h3(textOutput(outputId='meanTemp')), class="toptile")),
+            column(width=3, 
+                  tags$div("Max Temp.",
+                      h3(textOutput(outputId='maxTemp')), class="toptile")),
+            column(width=3, 
+                   tags$div("Min Temp.",
+                   h3(textOutput(outputId='minTemp')), class='toptile'))
           ), ## end top row
           ## plots
           fluidRow(
