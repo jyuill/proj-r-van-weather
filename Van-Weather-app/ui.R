@@ -13,10 +13,11 @@ library(lubridate)
 library(here)
 library(scales)
 library(plotly)
+library(bslib)
 
 # Define UI for application that draws a histogram
 fluidPage(
-
+  theme=bs_theme(bootswatch='darkly'),
     # Application title
     titlePanel("Vancouver Weather"),
 
@@ -31,13 +32,27 @@ fluidPage(
                          selected='Daily')          
         , width=3), ## end sidebar
         mainPanel(
+          fluidRow(
+            column(width=3,"Total Precip.",
+                   h3(textOutput(outputId='ttlPrecip'))),
+            column(width=3, "Mean Temp.",
+                   h3(textOutput(outputId='meanTemp'))),
+            column(width=3, "Max Temp.",
+                  h3(textOutput(outputId='maxTemp'))),
+            column(width=3, "Min Temp.",
+                   h3(textOutput(outputId='minTemp')))
+          ), ## end top row
           ## plots
+          fluidRow(
+            column(width=6,
           plotOutput(
             outputId='precipPlot'
-          ),
+          )),
+          column(width=6,
           plotOutput(
             outputId='tempPlot'
-          )
+          ))
+        ) # end lower row
         , width=9) ## end main panel
     ) ## end sidebar layout
 )

@@ -25,17 +25,32 @@ vw_data$Season <- as.factor(vw_data$Season)
 vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fall"))
 
 
-# Define server logic required to draw a histogram
+# Define server logic required to show weather data
 function(input, output, session) {
-
+  ## get summary data for top boxes, reacting to date range inputs
+  smry <- reactive({vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
+          summarize(ttl_precip=sum(Total.Precip, na.rm=TRUE),
+                    mean_temp=mean(Mean.Temp, na.rm=TRUE),
+                    max_temp=max(Max.Temp, na.rm=TRUE),
+                    min_temp=min(Min.Temp, na.rm=TRUE))
+          
+  })
+  ## send specified data to UI for text boxes  
+    output$ttlPrecip <- renderText({smry()[[1]]})
+    output$meanTemp <- renderText(round({smry()[[2]]},1))
+    output$maxTemp <- renderText({smry()[[3]]})
+    output$minTemp <- renderText({smry()[[4]]})
+    
+    ## main precip plot
     output$precipPlot <- renderPlot({
         # draw the precip bar chart
         vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
         ggplot(aes(x=Date, y=Total.Precip))+geom_col()+
         labs(x="", y="Precip. (cm)")
     })
+    ## main temp chart
     output$tempPlot <- renderPlot({
-      # draw the precip bar chart
+      # draw the temp line chart
       vw_data %>% filter(Date >= input$dtrng[1] & Date <= input$dtrng[2]) %>%
         ggplot(aes(x=Date, y=Mean.Temp))+
         geom_ribbon(aes(ymin=Min.Temp, ymax=Max.Temp), fill='grey80')+
