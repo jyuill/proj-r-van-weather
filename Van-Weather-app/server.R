@@ -23,6 +23,14 @@ vw_data$Month <- as.factor(vw_data$Month)
 vw_data$Season <- as.factor(vw_data$Season)
 ## set Season order
 vw_data$Season <- factor(vw_data$Season, levels=c("Winter","Spring","Summer","Fall"))
+vw_mth <- vw_data %>% group_by(Year, Month) %>% summarize(
+  precip=sum(Total.Precip, na.rm=TRUE),
+  meanTemp=mean(Mean.Temp, na.rm=TRUE),
+  maxTemp=max(Max.Temp, na.rm=TRUE),
+  minTemp=min(Min.Tepm, na.rm=TRUE)
+) %>% mutate(
+  yrmon = ifelse(Month<10, paste0(Year,"-0",Month), paste0(Year,"-",Month))
+)
 
 
 # Define server logic required to show weather data
